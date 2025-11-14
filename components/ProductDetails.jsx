@@ -1,28 +1,29 @@
 'use client'
 
-import { addToCart } from "@/lib/features/cart/cartSlice";
 import { StarIcon, TagIcon, EarthIcon, CreditCardIcon, UserIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Image from "next/image";
-import Counter from "./Counter";
-import { useDispatch, useSelector } from "react-redux";
+// Temporarily disabled cart functionality
+// import { addToCart } from "@/lib/features/cart/cartSlice";
+// import { useRouter } from "next/navigation";
+// import Counter from "./Counter";
+// import { useDispatch, useSelector } from "react-redux";
 
 const ProductDetails = ({ product }) => {
 
     const productId = product.id;
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$';
 
-    const cart = useSelector(state => state.cart.cartItems);
-    const dispatch = useDispatch();
-
-    const router = useRouter()
+    // Temporarily disabled cart functionality
+    // const cart = useSelector(state => state.cart.cartItems);
+    // const dispatch = useDispatch();
+    // const router = useRouter()
 
     const [mainImage, setMainImage] = useState(product.images[0]);
 
-    const addToCartHandler = () => {
-        dispatch(addToCart({ productId }))
-    }
+    // const addToCartHandler = () => {
+    //     dispatch(addToCart({ productId }))
+    // }
 
     const averageRating = product.rating.reduce((acc, item) => acc + item.rating, 0) / product.rating.length;
     
@@ -56,7 +57,8 @@ const ProductDetails = ({ product }) => {
                     <TagIcon size={14} />
                     <p>Save {((product.mrp - product.price) / product.mrp * 100).toFixed(0)}% right now</p>
                 </div>
-                <div className="flex items-end gap-5 mt-10">
+                {/* Cart functionality temporarily hidden */}
+                {/* <div className="flex items-end gap-5 mt-10">
                     {
                         cart[productId] && (
                             <div className="flex flex-col gap-3">
@@ -68,7 +70,7 @@ const ProductDetails = ({ product }) => {
                     <button onClick={() => !cart[productId] ? addToCartHandler() : router.push('/cart')} className="bg-slate-800 text-white px-10 py-3 text-sm font-medium rounded hover:bg-slate-900 active:scale-95 transition">
                         {!cart[productId] ? 'Add to Cart' : 'View Cart'}
                     </button>
-                </div>
+                </div> */}
                 <hr className="border-gray-300 my-5" />
                 <div className="flex flex-col gap-4 text-slate-500">
                     <p className="flex gap-3"> <EarthIcon className="text-slate-400" /> Free shipping worldwide </p>

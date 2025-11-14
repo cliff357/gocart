@@ -7,7 +7,8 @@ export default function PublicLayout({ children }) {
 
     return (
         <>
-            <Banner />
+            {/* Banner temporarily hidden */}
+            {/* <Banner /> */}
             <Navbar />
             {children}
             <Footer />

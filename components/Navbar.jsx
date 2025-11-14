@@ -1,16 +1,16 @@
 'use client'
-import { Search, ShoppingCart } from "lucide-react";
+import { Search } from "lucide-react"; // ShoppingCart temporarily disabled
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useSelector } from "react-redux";
+// import { useSelector } from "react-redux"; // Temporarily disabled
 
 const Navbar = () => {
 
     const router = useRouter();
 
     const [search, setSearch] = useState('')
-    const cartCount = useSelector(state => state.cart.total)
+    // const cartCount = useSelector(state => state.cart.total) // Temporarily disabled
 
     const handleSearch = (e) => {
         e.preventDefault()
@@ -41,11 +41,12 @@ const Navbar = () => {
                             <input className="w-full bg-transparent outline-none placeholder-slate-600" type="text" placeholder="Search products" value={search} onChange={(e) => setSearch(e.target.value)} required />
                         </form>
 
-                        <Link href="/cart" className="relative flex items-center gap-2 text-slate-600">
+                        {/* Cart temporarily hidden */}
+                        {/* <Link href="/cart" className="relative flex items-center gap-2 text-slate-600">
                             <ShoppingCart size={18} />
                             Cart
                             <button className="absolute -top-1 left-3 text-[8px] text-white bg-slate-600 size-3.5 rounded-full">{cartCount}</button>
-                        </Link>
+                        </Link> */}
 
                         <button className="px-8 py-2 bg-indigo-500 hover:bg-indigo-600 transition text-white rounded-full">
                             Login
