@@ -1,8 +1,9 @@
 import React from 'react'
 import Title from './Title'
-import { ourSpecsData } from '@/assets/assets'
+import { MockMiscData } from '@/lib/data/MockData'
 
 const OurSpecs = () => {
+    const ourSpecsData = MockMiscData.getOurSpecs();
 
     return (
         <div className='px-6 my-20 max-w-6xl mx-auto'>
