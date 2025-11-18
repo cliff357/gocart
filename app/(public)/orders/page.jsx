@@ -1,46 +1,22 @@
 'use client'
-import PageTitle from "@/components/PageTitle"
-import { useEffect, useState } from "react";
-import OrderItem from "@/components/OrderItem";
-import { orderDummyData } from "@/assets/assets";
+import Link from "next/link";
 
 export default function Orders() {
-
-    const [orders, setOrders] = useState([]);
-
-    useEffect(() => {
-        setOrders(orderDummyData)
-    }, []);
-
     return (
-        <div className="min-h-[70vh] mx-6">
-            {orders.length > 0 ? (
-                (
-                    <div className="my-20 max-w-7xl mx-auto">
-                        <PageTitle heading="My Orders" text={`Showing total ${orders.length} orders`} linkText={'Go to home'} />
-
-                        <table className="w-full max-w-5xl text-slate-500 table-auto border-separate border-spacing-y-12 border-spacing-x-4">
-                            <thead>
-                                <tr className="max-sm:text-sm text-slate-600 max-md:hidden">
-                                    <th className="text-left">Product</th>
-                                    <th className="text-center">Total Price</th>
-                                    <th className="text-left">Address</th>
-                                    <th className="text-left">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {orders.map((order) => (
-                                    <OrderItem order={order} key={order.id} />
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )
-            ) : (
-                <div className="min-h-[80vh] mx-6 flex items-center justify-center text-slate-400">
-                    <h1 className="text-2xl sm:text-4xl font-semibold">You have no orders</h1>
-                </div>
-            )}
+        <div className="min-h-[80vh] mx-6 flex flex-col items-center justify-center text-slate-600">
+            <div className="text-center space-y-6">
+                <div className="text-6xl">📦</div>
+                <h1 className="text-2xl sm:text-4xl font-semibold text-slate-800">訂單功能即將推出</h1>
+                <p className="text-lg max-w-md mx-auto">
+                    我們正在開發訂單管理系統，敬請期待！目前您可以瀏覽我們精選的產品。
+                </p>
+                <Link 
+                    href="/shop" 
+                    className="inline-block bg-slate-800 text-white px-8 py-3 rounded-lg hover:bg-slate-900 transition"
+                >
+                    瀏覽產品
+                </Link>
+            </div>
         </div>
     )
 }

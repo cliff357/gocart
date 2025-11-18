@@ -1,6 +1,7 @@
-import { categories } from "@/assets/assets";
+import { MockMiscData } from "@/lib/data/MockData";
 
 const CategoriesMarquee = () => {
+    const categories = MockMiscData.getCategories();
 
     return (
         <div className="overflow-hidden w-full relative max-w-7xl mx-auto select-none group sm:my-20">

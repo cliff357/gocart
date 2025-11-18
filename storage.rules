@@ -1,0 +1,139 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // ============================================
+    // Helper Functions
+    // ============================================
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Check if user owns the resource
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && 
+             firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Validate file size (max 10MB)
+    function isValidSize() {
+      return request.resource.size < 10 * 1024 * 1024;
+    }
+    
+    // Validate image file types
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    // ============================================
+    // Product Images
+    // ============================================
+    match /products/{productId}/{fileName} {
+      // Everyone can read product images
+      allow read: if true;
+      
+      // Store owners can upload product images
+      allow write: if isAuthenticated() && 
+                      isValidSize() && 
+                      isImage();
+      
+      // Store owners and admins can delete product images
+      allow delete: if isAuthenticated() || isAdmin();
+    }
+    
+    // ============================================
+    // Store Images (Logos, Banners)
+    // ============================================
+    match /stores/{storeId}/{fileName} {
+      // Everyone can read store images
+      allow read: if true;
+      
+      // Store owners can upload store images
+      allow write: if isAuthenticated() && 
+                      isValidSize() && 
+                      isImage();
+      
+      // Store owners and admins can delete store images
+      allow delete: if isAuthenticated() || isAdmin();
+    }
+    
+    // ============================================
+    // User Profile Images
+    // ============================================
+    match /users/{userId}/{fileName} {
+      // Everyone can read user profile images
+      allow read: if true;
+      
+      // Users can upload their own profile images
+      allow write: if isOwner(userId) && 
+                      isValidSize() && 
+                      isImage();
+      
+      // Users can delete their own profile images
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+    
+    // ============================================
+    // Order Documents/Receipts
+    // ============================================
+    match /orders/{orderId}/{fileName} {
+      // Users can read their order documents
+      // Store owners can read order documents for their orders
+      allow read: if isAuthenticated();
+      
+      // Only authenticated users can upload order documents
+      allow write: if isAuthenticated() && isValidSize();
+      
+      // Users and admins can delete order documents
+      allow delete: if isAuthenticated() || isAdmin();
+    }
+    
+    // ============================================
+    // Public Assets (Banners, Promotional Images)
+    // ============================================
+    match /public/{fileName} {
+      // Everyone can read public assets
+      allow read: if true;
+      
+      // Only admins can upload/update public assets
+      allow write: if isAdmin() && isValidSize() && isImage();
+      
+      // Only admins can delete public assets
+      allow delete: if isAdmin();
+    }
+    
+    // ============================================
+    // Temporary Uploads
+    // ============================================
+    match /temp/{userId}/{fileName} {
+      // Users can access their temporary files
+      allow read, write: if isOwner(userId) && isValidSize();
+      
+      // Temporary files can be deleted by owner or admin
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+    
+    // ============================================
+    // Admin Files
+    // ============================================
+    match /admin/{allPaths=**} {
+      // Only admins can access admin files
+      allow read, write, delete: if isAdmin();
+    }
+    
+    // ============================================
+    // Default: Deny All
+    // ============================================
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
