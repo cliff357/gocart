@@ -2,6 +2,8 @@ import { Outfit } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import StoreProvider from "@/app/StoreProvider";
 import "./globals.css";
+// Initialize Firebase on app startup
+import "@/lib/firebase/config";
 
 const outfit = Outfit({ subsets: ["latin"], weight: ["400", "500", "600"] });
 
