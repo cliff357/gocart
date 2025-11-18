@@ -223,7 +223,7 @@ vercel login
 
 # 設置環境變數
 vercel env add NEXT_PUBLIC_FIREBASE_API_KEY
-# 輸入值: AIzaSyAcn8EeoVP11FyRWeS71IaMCw2Z8_VqMXg
+# 輸入你的 API Key
 
 # 重複以上步驟添加所有變數
 ```
