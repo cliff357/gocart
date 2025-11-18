@@ -32,6 +32,21 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env
+.env*.local
+.env.development
+.env.production
+
+# Firebase
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+.firebaserc
+
+# Functions (if using Firebase Functions)
+functions/.env
+functions/.runtimeconfig.json
+functions/node_modules/
+functions/lib/
 
 # vercel
 .vercel
