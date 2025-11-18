@@ -1,6 +1,7 @@
 import { Outfit } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import StoreProvider from "@/app/StoreProvider";
+import FirebaseStatus from "@/components/FirebaseStatus";
 import "./globals.css";
 // Initialize Firebase on app startup
 import "@/lib/firebase/config";
@@ -19,6 +20,7 @@ export default function RootLayout({ children }) {
                 <StoreProvider>
                     <Toaster />
                     {children}
+                    <FirebaseStatus />
                 </StoreProvider>
             </body>
         </html>
