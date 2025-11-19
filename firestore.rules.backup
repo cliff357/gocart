@@ -3,18 +3,6 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     // ============================================
-    // 簡化版安全規則
-    // 所有人可以讀取，稍後再加回 Authentication
-    // ============================================
-    
-    // 所有集合：任何人可讀
-    match /{document=**} {
-      allow read: if true;
-      allow write: if false; // 禁止寫入（稍後加回 auth）
-    }
-    
-    /* 
-    // ============================================
     // Helper Functions
     // ============================================
     
@@ -223,6 +211,5 @@ service cloud.firestore {
     match /{document=**} {
       allow read, write: if false;
     }
-    */
   }
 }
