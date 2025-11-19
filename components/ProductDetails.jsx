@@ -25,7 +25,19 @@ const ProductDetails = ({ product }) => {
     //     dispatch(addToCart({ productId }))
     // }
 
-    const averageRating = product.rating.reduce((acc, item) => acc + item.rating, 0) / product.rating.length;
+    // 計算平均評分，支持兩種格式
+    let averageRating = 0;
+    let totalReviews = 0;
+    
+    if (product.averageRating !== undefined) {
+        // 使用 Firebase 格式（已預先計算）
+        averageRating = product.averageRating;
+        totalReviews = product.totalRatings || 0;
+    } else if (product.rating && Array.isArray(product.rating) && product.rating.length > 0) {
+        // 使用 MockData 格式（需要計算）
+        averageRating = product.rating.reduce((acc, item) => acc + item.rating, 0) / product.rating.length;
+        totalReviews = product.rating.length;
+    }
     
     return (
         <div className="flex max-lg:flex-col gap-12">
@@ -47,7 +59,7 @@ const ProductDetails = ({ product }) => {
                     {Array(5).fill('').map((_, index) => (
                         <StarIcon key={index} size={14} className='text-transparent mt-0.5' fill={averageRating >= index + 1 ? "#00C950" : "#D1D5DB"} />
                     ))}
-                    <p className="text-sm ml-3 text-slate-500">{product.rating.length} Reviews</p>
+                    <p className="text-sm ml-3 text-slate-500">{totalReviews} Reviews</p>
                 </div>
                 <div className="flex items-start my-6 gap-3 text-2xl font-semibold text-slate-800">
                     <p> {currency}{product.price} </p>

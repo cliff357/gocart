@@ -9,7 +9,13 @@ const ProductCard = ({ product }) => {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$'
 
     // calculate the average rating of the product
-    const rating = Math.round(product.rating.reduce((acc, curr) => acc + curr.rating, 0) / product.rating.length);
+    // Handle both array format (old MockData) and number format (Firebase with averageRating)
+    let rating = 0;
+    if (product.rating && Array.isArray(product.rating) && product.rating.length > 0) {
+        rating = Math.round(product.rating.reduce((acc, curr) => acc + curr.rating, 0) / product.rating.length);
+    } else if (product.averageRating) {
+        rating = Math.round(product.averageRating);
+    }
 
     return (
         <Link href={`/product/${product.id}`} className=' group max-xl:mx-auto'>

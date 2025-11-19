@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- 背景圓形 -->
+  <circle cx="100" cy="100" r="100" fill="#4F46E5"/>
+  
+  <!-- 大寫 M 字 -->
+  <text 
+    x="100" 
+    y="100" 
+    font-family="Arial, Helvetica, sans-serif" 
+    font-size="120" 
+    font-weight="bold" 
+    fill="white" 
+    text-anchor="middle" 
+    dominant-baseline="central"
+  >M</text>
+</svg>

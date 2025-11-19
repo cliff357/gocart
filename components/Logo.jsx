@@ -10,7 +10,7 @@ const Logo = ({
   return (
     <Image 
       src={assets.logo}
-      alt="GoCart Logo"
+      alt="MyLoYauMarket Logo"
       width={size} 
       height={size}
       className={`object-contain ${className}`}

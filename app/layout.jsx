@@ -9,13 +9,25 @@ import "@/lib/firebase/config";
 const outfit = Outfit({ subsets: ["latin"], weight: ["400", "500", "600"] });
 
 export const metadata = {
-    title: "GoCart. - Shop smarter",
-    description: "GoCart. - Shop smarter",
+    title: "MyLoYauMarket - Shop smarter",
+    description: "MyLoYauMarket - Your trusted online marketplace",
+    icons: {
+        icon: [
+            { url: '/icon.svg', type: 'image/svg+xml' },
+            { url: '/favicon.svg', type: 'image/svg+xml' }
+        ],
+        shortcut: '/favicon.svg',
+        apple: '/icon.svg',
+    },
 };
 
 export default function RootLayout({ children }) {
     return (
         <html lang="en">
+            <head>
+                <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+                <link rel="alternate icon" href="/favicon.svg" type="image/svg+xml" />
+            </head>
             <body className={`${outfit.className} antialiased`}>
                 <StoreProvider>
                     <Toaster />
