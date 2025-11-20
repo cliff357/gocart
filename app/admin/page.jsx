@@ -1,20 +1,24 @@
 'use client'
 import Loading from "@/components/Loading"
 import OrdersAreaChart from "@/components/OrdersAreaChart"
-import { CircleDollarSignIcon, ShoppingBasketIcon, StoreIcon, TagsIcon } from "lucide-react"
+import { CircleDollarSignIcon, ShoppingBasketIcon, TagsIcon } from "lucide-react"
 import { useEffect, useState } from "react"
-import { productService, storeService, orderService } from "@/lib/services/ApiService"
+import { ProductApiService, OrderApiService } from "@/lib/services/ApiService"
+import { useAuth } from "@/lib/context/AuthContext"
+import { useRouter } from "next/navigation"
+import toast from "react-hot-toast"
 
 export default function AdminDashboard() {
 
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$'
+    const { isAdmin, loading: authLoading } = useAuth()
+    const router = useRouter()
 
     const [loading, setLoading] = useState(true)
     const [dashboardData, setDashboardData] = useState({
         products: 0,
         revenue: 0,
         orders: 0,
-        stores: 0,
         allOrders: [],
     })
 
@@ -22,20 +26,17 @@ export default function AdminDashboard() {
         { title: 'Total Products', value: dashboardData.products, icon: ShoppingBasketIcon },
         { title: 'Total Revenue', value: currency + dashboardData.revenue, icon: CircleDollarSignIcon },
         { title: 'Total Orders', value: dashboardData.orders, icon: TagsIcon },
-        { title: 'Total Stores', value: dashboardData.stores, icon: StoreIcon },
     ]
 
     const fetchDashboardData = async () => {
         try {
             // 並行獲取所有數據
-            const [productsRes, storesRes, ordersRes] = await Promise.all([
-                productService.getAll(),
-                storeService.getAll(),
-                orderService.getAll()
+            const [productsRes, ordersRes] = await Promise.all([
+                ProductApiService.getAllProducts(),
+                OrderApiService.getAllOrders()
             ])
 
             const products = productsRes.data || []
-            const stores = storesRes.data || []
             const allOrders = ordersRes.data || []
 
             // 計算總收入
@@ -45,7 +46,6 @@ export default function AdminDashboard() {
                 products: products.length,
                 revenue: revenue,
                 orders: allOrders.length,
-                stores: stores.length,
                 allOrders: allOrders,
             })
         } catch (error) {
@@ -59,6 +59,21 @@ export default function AdminDashboard() {
         fetchDashboardData()
     }, [])
 
+    // 🔒 保護：檢查權限
+    useEffect(() => {
+        if (!authLoading && !isAdmin) {
+            toast.error('需要管理員權限才能訪問此頁面')
+            router.push('/')
+        }
+    }, [authLoading, isAdmin, router])
+
+    // 等待權限檢查
+    if (authLoading) return <Loading />
+    
+    // 非管理員：不顯示內容
+    if (!isAdmin) return null
+
+    // 等待數據加載
     if (loading) return <Loading />
 
     return (

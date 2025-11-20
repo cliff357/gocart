@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import { format } from "date-fns"
 import toast from "react-hot-toast"
 import { DeleteIcon } from "lucide-react"
-import { couponService } from "@/lib/services/ApiService"
+import { CouponApiService } from "@/lib/services/ApiService"
 
 export default function AdminCoupons() {
 
@@ -21,7 +21,7 @@ export default function AdminCoupons() {
 
     const fetchCoupons = async () => {
         try {
-            const response = await couponService.getAll()
+            const response = await CouponApiService.getAllCoupons()
             setCoupons(response.data || [])
         } catch (error) {
             console.error('❌ Failed to fetch coupons:', error)
@@ -38,7 +38,7 @@ export default function AdminCoupons() {
                 expiresAt: new Date(newCoupon.expiresAt)
             }
             
-            await couponService.create(couponData)
+            await CouponApiService.createCoupon(couponData)
             
             // 重新加載優惠券列表
             await fetchCoupons()
@@ -73,7 +73,7 @@ export default function AdminCoupons() {
                 throw new Error('Coupon not found')
             }
             
-            await couponService.delete(coupon.id)
+            await CouponApiService.deleteCoupon(coupon.id)
             
             // 從列表移除
             setCoupons(coupons.filter(c => c.code !== code))
