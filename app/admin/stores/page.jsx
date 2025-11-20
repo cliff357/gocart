@@ -1,9 +1,9 @@
 'use client'
-import { storesDummyData } from "@/assets/assets"
 import StoreInfo from "@/components/admin/StoreInfo"
 import Loading from "@/components/Loading"
 import { useEffect, useState } from "react"
 import toast from "react-hot-toast"
+import { storeService } from "@/lib/services/ApiService"
 
 export default function AdminStores() {
 
@@ -11,13 +11,36 @@ export default function AdminStores() {
     const [loading, setLoading] = useState(true)
 
     const fetchStores = async () => {
-        setStores(storesDummyData)
-        setLoading(false)
+        try {
+            const response = await storeService.getAll()
+            setStores(response.data || [])
+        } catch (error) {
+            console.error('❌ Failed to fetch stores:', error)
+            toast.error('Failed to load stores')
+        } finally {
+            setLoading(false)
+        }
     }
 
     const toggleIsActive = async (storeId) => {
-        // Logic to toggle the status of a store
+        try {
+            const store = stores.find(s => s.id === storeId)
+            if (!store) return
 
+            await storeService.update(storeId, { 
+                isActive: !store.isActive 
+            })
+            
+            // 更新本地狀態
+            setStores(stores.map(s => 
+                s.id === storeId ? { ...s, isActive: !s.isActive } : s
+            ))
+            
+            toast.success('Store status updated')
+        } catch (error) {
+            console.error('❌ Failed to toggle store status:', error)
+            throw error // toast.promise 會處理錯誤
+        }
     }
 
     useEffect(() => {

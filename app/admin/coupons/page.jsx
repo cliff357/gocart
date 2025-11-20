@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import { format } from "date-fns"
 import toast from "react-hot-toast"
 import { DeleteIcon } from "lucide-react"
-import { couponDummyData } from "@/assets/assets"
+import { couponService } from "@/lib/services/ApiService"
 
 export default function AdminCoupons() {
 
@@ -20,14 +20,45 @@ export default function AdminCoupons() {
     })
 
     const fetchCoupons = async () => {
-        setCoupons(couponDummyData)
+        try {
+            const response = await couponService.getAll()
+            setCoupons(response.data || [])
+        } catch (error) {
+            console.error('❌ Failed to fetch coupons:', error)
+            toast.error('Failed to load coupons')
+        }
     }
 
     const handleAddCoupon = async (e) => {
         e.preventDefault()
-        // Logic to add a coupon
-
-
+        try {
+            const couponData = {
+                ...newCoupon,
+                discount: parseInt(newCoupon.discount),
+                expiresAt: new Date(newCoupon.expiresAt)
+            }
+            
+            await couponService.create(couponData)
+            
+            // 重新加載優惠券列表
+            await fetchCoupons()
+            
+            // 重置表單
+            setNewCoupon({
+                code: '',
+                description: '',
+                discount: '',
+                forNewUser: false,
+                forMember: false,
+                isPublic: false,
+                expiresAt: new Date()
+            })
+            
+            toast.success('Coupon added successfully')
+        } catch (error) {
+            console.error('❌ Failed to add coupon:', error)
+            throw error // toast.promise 會處理錯誤
+        }
     }
 
     const handleChange = (e) => {
@@ -35,9 +66,23 @@ export default function AdminCoupons() {
     }
 
     const deleteCoupon = async (code) => {
-        // Logic to delete a coupon
-
-
+        try {
+            // 找到對應的優惠券 ID
+            const coupon = coupons.find(c => c.code === code)
+            if (!coupon) {
+                throw new Error('Coupon not found')
+            }
+            
+            await couponService.delete(coupon.id)
+            
+            // 從列表移除
+            setCoupons(coupons.filter(c => c.code !== code))
+            
+            toast.success('Coupon deleted')
+        } catch (error) {
+            console.error('❌ Failed to delete coupon:', error)
+            throw error // toast.promise 會處理錯誤
+        }
     }
 
     useEffect(() => {

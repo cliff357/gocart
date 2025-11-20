@@ -5,7 +5,8 @@ import { useEffect, useState } from "react"
 import { MailIcon, MapPinIcon } from "lucide-react"
 import Loading from "@/components/Loading"
 import Image from "next/image"
-import { dummyStoreData, productDummyData } from "@/assets/assets"
+import { storeService, productService } from "@/lib/services/ApiService"
+import toast from "react-hot-toast"
 
 export default function StoreShop() {
 
@@ -15,9 +16,31 @@ export default function StoreShop() {
     const [loading, setLoading] = useState(true)
 
     const fetchStoreData = async () => {
-        setStoreInfo(dummyStoreData)
-        setProducts(productDummyData)
-        setLoading(false)
+        try {
+            // 根據 username 獲取店鋪資料
+            const storesRes = await storeService.getAll()
+            const allStores = storesRes.data || []
+            const store = allStores.find(s => 
+                s.username === username || s.name === username
+            )
+
+            if (!store) {
+                toast.error('Store not found')
+                setLoading(false)
+                return
+            }
+
+            setStoreInfo(store)
+
+            // 獲取店鋪的產品
+            const productsRes = await productService.getByStore(store.id)
+            setProducts(productsRes.data || [])
+        } catch (error) {
+            console.error('❌ Failed to fetch store data:', error)
+            toast.error('Failed to load store')
+        } finally {
+            setLoading(false)
+        }
     }
 
     useEffect(() => {

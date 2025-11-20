@@ -3,24 +3,54 @@ import { useEffect, useState } from "react"
 import { toast } from "react-hot-toast"
 import Image from "next/image"
 import Loading from "@/components/Loading"
-import { productDummyData } from "@/assets/assets"
+import { productService } from "@/lib/services/ApiService"
+import { useAuth } from "@/lib/context/AuthContext"
 
 export default function StoreManageProducts() {
 
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$'
+    const { userDoc } = useAuth()
 
     const [loading, setLoading] = useState(true)
     const [products, setProducts] = useState([])
 
     const fetchProducts = async () => {
-        setProducts(productDummyData)
-        setLoading(false)
+        try {
+            if (!userDoc?.storeId) {
+                console.warn('⚠️ No store ID found')
+                setLoading(false)
+                return
+            }
+
+            const response = await productService.getByStore(userDoc.storeId)
+            setProducts(response.data || [])
+        } catch (error) {
+            console.error('❌ Failed to fetch products:', error)
+            toast.error('Failed to load products')
+        } finally {
+            setLoading(false)
+        }
     }
 
     const toggleStock = async (productId) => {
-        // Logic to toggle the stock of a product
+        try {
+            const product = products.find(p => p.id === productId)
+            if (!product) return
 
+            await productService.update(productId, {
+                inStock: !product.inStock
+            })
 
+            // 更新本地狀態
+            setProducts(products.map(p =>
+                p.id === productId ? { ...p, inStock: !p.inStock } : p
+            ))
+
+            toast.success('Stock status updated')
+        } catch (error) {
+            console.error('❌ Failed to toggle stock:', error)
+            toast.error('Failed to update stock status')
+        }
     }
 
     useEffect(() => {

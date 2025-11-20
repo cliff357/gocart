@@ -1,25 +1,45 @@
 'use client'
-import { storesDummyData } from "@/assets/assets"
 import StoreInfo from "@/components/admin/StoreInfo"
 import Loading from "@/components/Loading"
 import { useEffect, useState } from "react"
 import toast from "react-hot-toast"
+import { storeService } from "@/lib/services/ApiService"
 
 export default function AdminApprove() {
 
     const [stores, setStores] = useState([])
     const [loading, setLoading] = useState(true)
 
-
     const fetchStores = async () => {
-        setStores(storesDummyData)
-        setLoading(false)
+        try {
+            const response = await storeService.getAll()
+            // 只顯示未批准的店鋪
+            const pendingStores = (response.data || []).filter(
+                store => store.status === 'pending'
+            )
+            setStores(pendingStores)
+        } catch (error) {
+            console.error('❌ Failed to fetch stores:', error)
+            toast.error('Failed to load pending stores')
+        } finally {
+            setLoading(false)
+        }
     }
 
     const handleApprove = async ({ storeId, status }) => {
-        // Logic to approve a store
-
-
+        try {
+            await storeService.update(storeId, { status })
+            
+            // 從列表移除已處理的店鋪
+            setStores(stores.filter(s => s.id !== storeId))
+            
+            toast.success(
+                status === 'approved' ? 'Store approved!' : 'Store rejected'
+            )
+        } catch (error) {
+            console.error('❌ Failed to update store status:', error)
+            throw error // toast.promise 會處理錯誤
+        }
     }
 
     useEffect(() => {

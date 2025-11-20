@@ -20,3 +20,21 @@
 .no-scrollbar::-webkit-scrollbar {
     display: none;
 }
+
+/* reCAPTCHA v3 Badge 樣式調整 */
+/* 選項 1: 保留但調整位置（推薦） */
+.grecaptcha-badge {
+    visibility: visible !important;
+    display: block !important;
+    opacity: 1 !important;
+    bottom: 14px !important;
+    right: 14px !important;
+    z-index: 999 !important;
+}
+
+/* 選項 2: 隱藏 badge（必須在網站顯示 reCAPTCHA 條款） */
+/* 
+.grecaptcha-badge {
+    visibility: hidden !important;
+}
+*/

@@ -1,9 +1,9 @@
 'use client'
-import { dummyAdminDashboardData } from "@/assets/assets"
 import Loading from "@/components/Loading"
 import OrdersAreaChart from "@/components/OrdersAreaChart"
 import { CircleDollarSignIcon, ShoppingBasketIcon, StoreIcon, TagsIcon } from "lucide-react"
 import { useEffect, useState } from "react"
+import { productService, storeService, orderService } from "@/lib/services/ApiService"
 
 export default function AdminDashboard() {
 
@@ -26,8 +26,33 @@ export default function AdminDashboard() {
     ]
 
     const fetchDashboardData = async () => {
-        setDashboardData(dummyAdminDashboardData)
-        setLoading(false)
+        try {
+            // 並行獲取所有數據
+            const [productsRes, storesRes, ordersRes] = await Promise.all([
+                productService.getAll(),
+                storeService.getAll(),
+                orderService.getAll()
+            ])
+
+            const products = productsRes.data || []
+            const stores = storesRes.data || []
+            const allOrders = ordersRes.data || []
+
+            // 計算總收入
+            const revenue = allOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0)
+
+            setDashboardData({
+                products: products.length,
+                revenue: revenue,
+                orders: allOrders.length,
+                stores: stores.length,
+                allOrders: allOrders,
+            })
+        } catch (error) {
+            console.error('❌ Failed to fetch dashboard data:', error)
+        } finally {
+            setLoading(false)
+        }
     }
 
     useEffect(() => {

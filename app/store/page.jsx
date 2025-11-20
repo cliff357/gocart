@@ -1,16 +1,17 @@
 'use client'
-import { dummyStoreDashboardData } from "@/assets/assets"
 import Loading from "@/components/Loading"
 import { CircleDollarSignIcon, ShoppingBasketIcon, StarIcon, TagsIcon } from "lucide-react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { productService, orderService, ratingService } from "@/lib/services/ApiService"
+import { useAuth } from "@/lib/context/AuthContext"
 
 export default function Dashboard() {
 
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$'
-
     const router = useRouter()
+    const { userDoc } = useAuth()
 
     const [loading, setLoading] = useState(true)
     const [dashboardData, setDashboardData] = useState({
@@ -28,8 +29,46 @@ export default function Dashboard() {
     ]
 
     const fetchDashboardData = async () => {
-        setDashboardData(dummyStoreDashboardData)
-        setLoading(false)
+        try {
+            if (!userDoc?.storeId) {
+                console.warn('⚠️ No store ID found for user')
+                setLoading(false)
+                return
+            }
+
+            // 獲取店鋪的所有產品
+            const productsRes = await productService.getByStore(userDoc.storeId)
+            const products = productsRes.data || []
+            
+            // 獲取所有訂單並篩選此店鋪的訂單
+            const ordersRes = await orderService.getAll()
+            const allOrders = ordersRes.data || []
+            const storeOrders = allOrders.filter(order => 
+                order.items?.some(item => 
+                    products.some(p => p.id === item.productId)
+                )
+            )
+            
+            // 計算總收入
+            const totalEarnings = storeOrders.reduce((sum, order) => 
+                sum + (order.totalAmount || 0), 0
+            )
+            
+            // 獲取此店鋪所有產品的評價
+            const ratingsRes = await ratingService.getByStore(userDoc.storeId)
+            const ratings = ratingsRes.data || []
+
+            setDashboardData({
+                totalProducts: products.length,
+                totalEarnings,
+                totalOrders: storeOrders.length,
+                ratings
+            })
+        } catch (error) {
+            console.error('❌ Failed to fetch dashboard data:', error)
+        } finally {
+            setLoading(false)
+        }
     }
 
     useEffect(() => {

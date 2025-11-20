@@ -1,24 +1,61 @@
 'use client'
 import { useEffect, useState } from "react"
 import Loading from "@/components/Loading"
-import { orderDummyData } from "@/assets/assets"
+import { orderService, productService } from "@/lib/services/ApiService"
+import { useAuth } from "@/lib/context/AuthContext"
+import toast from "react-hot-toast"
 
 export default function StoreOrders() {
+    const { userDoc } = useAuth()
     const [orders, setOrders] = useState([])
     const [loading, setLoading] = useState(true)
     const [selectedOrder, setSelectedOrder] = useState(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
 
-
     const fetchOrders = async () => {
-       setOrders(orderDummyData)
-       setLoading(false)
+        try {
+            if (!userDoc?.storeId) {
+                console.warn('⚠️ No store ID found')
+                setLoading(false)
+                return
+            }
+
+            // 獲取店鋪的所有產品
+            const productsRes = await productService.getByStore(userDoc.storeId)
+            const products = productsRes.data || []
+            const productIds = products.map(p => p.id)
+
+            // 獲取所有訂單並篩選
+            const ordersRes = await orderService.getAll()
+            const allOrders = ordersRes.data || []
+            
+            const storeOrders = allOrders.filter(order =>
+                order.items?.some(item => productIds.includes(item.productId))
+            )
+
+            setOrders(storeOrders)
+        } catch (error) {
+            console.error('❌ Failed to fetch orders:', error)
+            toast.error('Failed to load orders')
+        } finally {
+            setLoading(false)
+        }
     }
 
     const updateOrderStatus = async (orderId, status) => {
-        // Logic to update the status of an order
-
-
+        try {
+            await orderService.update(orderId, { status })
+            
+            // 更新本地狀態
+            setOrders(orders.map(o => 
+                o.id === orderId ? { ...o, status } : o
+            ))
+            
+            toast.success('Order status updated')
+        } catch (error) {
+            console.error('❌ Failed to update order:', error)
+            toast.error('Failed to update order status')
+        }
     }
 
     const openModal = (order) => {
