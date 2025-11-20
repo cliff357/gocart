@@ -2,6 +2,7 @@ import { Outfit } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import StoreProvider from "@/app/StoreProvider";
 import FirebaseStatus from "@/components/FirebaseStatus";
+import { AuthProvider } from "@/lib/context/AuthContext";
 import "./globals.css";
 // Initialize Firebase on app startup
 import "@/lib/firebase/config";
@@ -29,11 +30,13 @@ export default function RootLayout({ children }) {
                 <link rel="alternate icon" href="/favicon.svg" type="image/svg+xml" />
             </head>
             <body className={`${outfit.className} antialiased`}>
-                <StoreProvider>
-                    <Toaster />
-                    {children}
-                    <FirebaseStatus />
-                </StoreProvider>
+                <AuthProvider>
+                    <StoreProvider>
+                        <Toaster />
+                        {children}
+                        <FirebaseStatus />
+                    </StoreProvider>
+                </AuthProvider>
             </body>
         </html>
     );
