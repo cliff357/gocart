@@ -10,11 +10,11 @@ const AdminNavbar = () => {
             <Link href="/" className="relative flex items-center gap-2">
                 <Logo size={50} />
                 <span className="text-xs font-semibold px-3 py-1 rounded-full text-white bg-green-500">
-                    Admin
+                    陶豬管理員
                 </span>
             </Link>
             <div className="flex items-center gap-3">
-                <p>Hi, Admin</p>
+                <p>Hi, 陶豬管理員</p>
             </div>
         </div>
     )

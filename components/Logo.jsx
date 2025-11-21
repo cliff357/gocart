@@ -10,7 +10,7 @@ const Logo = ({
   return (
     <Image 
       src={assets.logo}
-      alt="大展鴻陶"
+      alt="MyLoYau"
       width={size} 
       height={size}
       className={`object-contain ${className}`}

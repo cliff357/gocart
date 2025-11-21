@@ -14,26 +14,24 @@ const Footer = () => {
         {
             title: "PRODUCTS",
             links: [
-                { text: "Earphones", path: '/', icon: null },
-                { text: "Headphones", path: '/', icon: null },
-                { text: "Smartphones", path: '/', icon: null },
-                { text: "Laptops", path: '/', icon: null },
+                { text: "陶相架", path: '/shop?category=陶相架', icon: null },
+                { text: "陶出魔幻紀", path: '/shop?category=陶出魔幻紀', icon: null },
+                { text: "陶盒子", path: '/shop?category=陶盒子', icon: null },
+                { text: "陶磁", path: '/shop?category=陶磁', icon: null },
             ]
         },
         {
-            title: "WEBSITE?",
+            title: "WEBSITE",
             links: [
                 { text: "Home", path: '/', icon: null },
                 { text: "Privacy Policy", path: '/', icon: null },
-                { text: "Become Plus Member", path: '/pricing', icon: null },
             ]
         },
         {
             title: "CONTACT",
             links: [
-                { text: "+1-212-456-7890", path: '/', icon: MailIcon },
-                { text: "contact@example.com", path: '/', icon: PhoneIcon },
-                { text: "794 Francisco, 94102", path: '/', icon: MapPinIcon }
+                { text: "myloyau@gmail.com", path: 'mailto:myloyau@gmail.com', icon: MailIcon },
+                { text: "香港 D2 Place Market", path: '/', icon: MapPinIcon }
             ]
         }
     ];
@@ -51,13 +49,14 @@ const Footer = () => {
                 <div className="flex flex-col md:flex-row items-start justify-between gap-10 py-10 border-b border-slate-500/30 text-slate-500">
                     <div>
                         <p className="max-w-[410px] mt-6 text-sm">Welcome to our marketplace, your ultimate destination for the latest and smartest gadgets. From smartphones and smartwatches to essential accessories, we bring you the best in innovation — all in one place.</p>
-                        <div className="flex items-center gap-3 mt-5">
+                        {/* Social media icons temporarily hidden */}
+                        {/* <div className="flex items-center gap-3 mt-5">
                             {socialIcons.map((item, i) => (
                                 <Link href={item.link} key={i} className="flex items-center justify-center w-10 h-10 bg-slate-100 hover:scale-105 hover:border border-slate-300 transition rounded-full">
                                     <item.icon />
                                 </Link>
                             ))}
-                        </div>
+                        </div> */}
                     </div>
                     <div className="flex flex-wrap justify-between w-full md:w-[45%] gap-5 text-sm ">
                         {linkSections.map((section, index) => (

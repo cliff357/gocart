@@ -54,6 +54,15 @@ export default function AddProductPage() {
         return null;
     }
 
+    // Loading state
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="w-12 h-12 rounded-full border-4 border-gray-300 border-t-indigo-500 animate-spin"></div>
+            </div>
+        );
+    }
+
     // Handle form input change
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -87,6 +96,10 @@ export default function AddProductPage() {
     // Upload image to Firebase Storage
     const uploadImageToStorage = async (file) => {
         try {
+            if (!storage) {
+                throw new Error('Firebase Storage 未初始化');
+            }
+            
             const timestamp = Date.now();
             const filename = `products/${timestamp}_${file.name}`;
             const storageRef = ref(storage, filename);
@@ -170,14 +183,6 @@ export default function AddProductPage() {
             setUploading(false);
         }
     };
-
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="w-12 h-12 rounded-full border-4 border-gray-300 border-t-indigo-500 animate-spin"></div>
-            </div>
-        );
-    }
 
     return (
         <div className="max-w-4xl mx-auto p-6">

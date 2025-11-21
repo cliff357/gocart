@@ -77,7 +77,7 @@ export default function LoginButton() {
                             <p className="text-xs text-slate-500">{user.email}</p>
                             {isAdmin && (
                                 <p className="text-xs text-indigo-600 mt-1 flex items-center gap-1">
-                                    <Shield size={12} /> 管理員
+                                    <Shield size={12} /> 陶豬管理員
                                 </p>
                             )}
                         </div>
@@ -89,7 +89,7 @@ export default function LoginButton() {
                                 onClick={() => setShowMenu(false)}
                             >
                                 <Shield size={16} />
-                                管理後台
+                                陶豬管理員
                             </Link>
                         )}
 
