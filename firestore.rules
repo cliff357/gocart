@@ -3,14 +3,29 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     // ============================================
-    // 簡化版安全規則
-    // 所有人可以讀取，稍後再加回 Authentication
+    // Helper Functions
     // ============================================
     
-    // 所有集合：任何人可讀
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+    
+    // ============================================
+    // Security Rules: 所有人可讀，只有 Admin 可寫
+    // ============================================
+    
+    // 所有集合：所有人可讀，只有 admin 可寫
     match /{document=**} {
-      allow read: if true;
-      allow write: if false; // 禁止寫入（稍後加回 auth）
+      allow read: if true;           // 所有人可讀
+      allow write: if isAdmin();     // 只有 admin 可寫
     }
     
     /* 

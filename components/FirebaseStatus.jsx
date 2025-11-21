@@ -16,6 +16,9 @@ export default function FirebaseStatus() {
         return () => clearTimeout(timer)
     }, [])
 
+    // Production 環境不顯示狀態指示器
+    if (process.env.NODE_ENV === 'production') return null
+    
     if (!status) return null
 
     const isHealthy = status.initialized && status.missingKeys.length === 0
