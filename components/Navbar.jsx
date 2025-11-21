@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Logo from "./Logo"; // Import our new logo
-import LoginButton from "./LoginButton";
 // import { useSelector } from "react-redux"; // Temporarily disabled
 
 const Navbar = () => {
@@ -47,13 +46,6 @@ const Navbar = () => {
                             <button className="absolute -top-1 left-3 text-[8px] text-white bg-slate-600 size-3.5 rounded-full">{cartCount}</button>
                         </Link> */}
 
-                        <LoginButton />
-
-                    </div>
-
-                    {/* Mobile Login Button */}
-                    <div className="sm:hidden">
-                        <LoginButton />
                     </div>
                 </div>
             </div>
