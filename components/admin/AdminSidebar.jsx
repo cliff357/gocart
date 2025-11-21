@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname } from "next/navigation"
-import { HomeIcon, TicketPercentIcon } from "lucide-react"
+import { HomeIcon, PlusCircle } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { assets } from "@/assets/assets"
@@ -12,14 +12,14 @@ const AdminSidebar = () => {
 
     const sidebarLinks = [
         { name: 'Dashboard', href: '/admin', icon: HomeIcon },
-        { name: 'Coupons', href: '/admin/coupons', icon: TicketPercentIcon  },
+        { name: 'Add Product', href: '/admin/products', icon: PlusCircle },
     ]
 
     return (
         <div className="inline-flex h-full flex-col gap-5 border-r border-slate-200 sm:min-w-60">
             <div className="flex flex-col gap-3 justify-center items-center pt-8 max-sm:hidden">
                 <Image className="w-14 h-14 rounded-full" src={assets.gs_logo} alt="" width={80} height={80} />
-                <p className="text-slate-700">Hi, GreatStack</p>
+                <p className="text-slate-700">大展鴻陶</p>
             </div>
 
             <div className="max-sm:mt-6">

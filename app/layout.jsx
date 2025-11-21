@@ -10,8 +10,8 @@ import "@/lib/firebase/config";
 const outfit = Outfit({ subsets: ["latin"], weight: ["400", "500", "600"] });
 
 export const metadata = {
-    title: "MyLoYauMarket - Shop smarter",
-    description: "MyLoYauMarket - Your trusted online marketplace",
+    title: "大展鴻陶 - 手作陶藝精品",
+    description: "大展鴻陶 - 手工製作陶相架、陶盒子等精美陶藝產品",
     icons: {
         icon: [
             { url: '/icon.svg', type: 'image/svg+xml' },
