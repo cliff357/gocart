@@ -1,25 +1,28 @@
 'use client'
 /**
- * Admin Add Product Page
- * 管理員添加產品頁面
+ * Admin Edit Product Page
+ * 管理員編輯產品頁面
  */
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/context/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import { fetchProducts } from '@/lib/features/product/productSlice';
 import { toast } from 'react-hot-toast';
-import { Upload, Plus, X } from 'lucide-react';
+import { Upload, Save, X } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { storage } from '@/lib/firebase/config';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { productService, categoryService } from '@/lib/services/FirestoreService';
 
-export default function AddProductPage() {
+export default function EditProductPage() {
     const { isAdmin, loading } = useAuth();
     const router = useRouter();
+    const params = useParams();
     const dispatch = useDispatch();
+    const productId = params.productId;
     
     const [formData, setFormData] = useState({
         name: '',
@@ -30,35 +33,12 @@ export default function AddProductPage() {
         bestseller: false,
     });
 
-    const [categories, setCategories] = useState([])
-    const [catsLoading, setCatsLoading] = useState(true)
-    
-    const [images, setImages] = useState([]); // Array of File
-    const [imagePreviews, setImagePreviews] = useState([]); // Array of preview URLs
+    const [categories, setCategories] = useState([]);
+    const [images, setImages] = useState([]); // File objects
+    const [imagePreviews, setImagePreviews] = useState([]); // Preview URLs
+    const [existingImages, setExistingImages] = useState([]); // Current product images
     const [uploading, setUploading] = useState(false);
-
-    // fetch categories from Firestore
-    useEffect(() => {
-        let mounted = true
-        const load = async () => {
-            try {
-                setCatsLoading(true)
-                const cats = await categoryService.getAll()
-                if (!mounted) return
-                setCategories(cats || [])
-                // set default category if none selected
-                if (!formData.category && (cats || []).length > 0) {
-                    setFormData(prev => ({ ...prev, category: cats[0].name }))
-                }
-            } catch (err) {
-                console.error('Failed to load categories', err)
-            } finally {
-                if (mounted) setCatsLoading(false)
-            }
-        }
-        load()
-        return () => { mounted = false }
-    }, [])
+    const [pageLoading, setPageLoading] = useState(true);
 
     // Redirect if not admin
     if (!loading && !isAdmin) {
@@ -75,6 +55,64 @@ export default function AddProductPage() {
         );
     }
 
+    // Load product and categories
+    useEffect(() => {
+        if (productId) {
+            loadData();
+        }
+    }, [productId]);
+
+    const loadData = async () => {
+        try {
+            setPageLoading(true);
+            console.log('Loading product:', productId);
+            
+            const [product, categoriesRes] = await Promise.all([
+                productService.getById(productId),
+                categoryService.getAll()
+            ]);
+            
+            console.log('Loaded product:', product);
+            console.log('Loaded categories:', categoriesRes);
+            
+            if (!product) {
+                toast.error('產品不存在');
+                router.push('/admin/products/list');
+                return;
+            }
+
+            // Set form data
+            setFormData({
+                name: product.name || '',
+                description: product.description || '',
+                price: product.price?.toString() || '',
+                mrp: product.mrp?.toString() || '',
+                category: product.category || '',
+                bestseller: product.bestseller || false,
+            });
+            
+            // Set existing images
+            setExistingImages(product.images || []);
+            setCategories(categoriesRes || []);
+            
+        } catch (error) {
+            console.error('Failed to load product:', error);
+            toast.error('載入產品失敗: ' + error.message);
+            router.push('/admin/products/list');
+        } finally {
+            setPageLoading(false);
+        }
+    };
+
+    // Show loading while fetching data
+    if (pageLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="w-12 h-12 rounded-full border-4 border-gray-300 border-t-indigo-500 animate-spin"></div>
+            </div>
+        );
+    }
+
     // Handle form input change
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -84,12 +122,12 @@ export default function AddProductPage() {
         }));
     };
 
-    // Handle image selection
+    // Handle image selection (new images to upload)
     const handleImageChange = (e) => {
         const files = Array.from(e.target.files || []);
         if (files.length === 0) return;
 
-        const maxFiles = 6; // limit number of uploads at once
+        const maxFiles = 6;
         const accepted = [];
         const previews = [];
 
@@ -113,7 +151,20 @@ export default function AddProductPage() {
         setImagePreviews(prev => [...prev, ...previews]);
     };
 
+    // Remove existing image
+    const removeExistingImage = (index) => {
+        setExistingImages(prev => prev.filter((_, i) => i !== index));
+    };
 
+    // Remove new image preview
+    const removeNewImage = (index) => {
+        try {
+            URL.revokeObjectURL(imagePreviews[index]);
+        } catch (e) {}
+        
+        setImages(prev => prev.filter((_, i) => i !== index));
+        setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    };
 
     // Upload image to Firebase Storage
     const uploadImageToStorage = async (file) => {
@@ -149,7 +200,7 @@ export default function AddProductPage() {
             return;
         }
 
-        if (!images || images.length === 0) {
+        if (existingImages.length === 0 && images.length === 0) {
             toast.error('請選擇至少一張產品圖片');
             return;
         }
@@ -157,13 +208,19 @@ export default function AddProductPage() {
         setUploading(true);
 
         try {
-            // 1. Upload images
-            toast.loading('上傳圖片中...', { id: 'upload' });
-            const uploadPromises = images.map(file => uploadImageToStorage(file));
-            const imageUrls = await Promise.all(uploadPromises);
-            toast.success('圖片上傳成功', { id: 'upload' });
+            // Upload new images if any
+            let newImageUrls = [];
+            if (images.length > 0) {
+                toast.loading('上傳新圖片中...', { id: 'upload' });
+                const uploadPromises = images.map(file => uploadImageToStorage(file));
+                newImageUrls = await Promise.all(uploadPromises);
+                toast.success('新圖片上傳成功', { id: 'upload' });
+            }
 
-            // 2. Create product data
+            // Combine existing and new image URLs
+            const allImageUrls = [...existingImages, ...newImageUrls];
+
+            // Create product data
             const productData = {
                 name: formData.name,
                 description: formData.description,
@@ -171,89 +228,105 @@ export default function AddProductPage() {
                 mrp: formData.mrp ? parseFloat(formData.mrp) : parseFloat(formData.price),
                 category: formData.category,
                 bestseller: formData.bestseller,
-                images: imageUrls,
+                images: allImageUrls,
                 inStock: true,
-                userId: 'admin', // 可以改成當前用戶 ID
-                storeId: 'admin_store', // 可以改成實際 store ID
             };
 
-            // 3. Save to Firestore
-            toast.loading('保存產品中...', { id: 'save' });
-            await productService.create(productData);
-            toast.success('產品添加成功！', { id: 'save' });
+            console.log('Updating product with data:', productData);
+            console.log('Category being saved:', formData.category);
 
-            // 4. Refresh Redux store to update public pages
+            // Update product in Firestore
+            toast.loading('更新產品中...', { id: 'save' });
+            await productService.update(productId, productData);
+            toast.success('產品更新成功！', { id: 'save' });
+
+            // Refresh Redux store to update public pages
             dispatch(fetchProducts());
 
-            // 5. Reset form
-            setFormData({
-                name: '',
-                description: '',
-                price: '',
-                mrp: '',
-                category: '陶相架',
-                bestseller: false,
-            });
-            setImages([]);
-            setImagePreviews([]);
-
-            // 5. Redirect to products list
+            // Redirect to products list
             setTimeout(() => {
-                router.push('/admin');
+                router.push('/admin/products/list');
             }, 1500);
 
         } catch (error) {
-            console.error('Error adding product:', error);
-            toast.error('添加產品失敗：' + error.message);
+            console.error('Error updating product:', error);
+            toast.error('更新產品失敗：' + error.message);
         } finally {
             setUploading(false);
         }
     };
 
+    const totalImages = existingImages.length + images.length;
+
     return (
         <div className="max-w-4xl mx-auto p-6">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-800">添加新產品</h1>
-                <p className="text-gray-600 mt-2">填寫產品資訊並上傳圖片</p>
+            <div className="mb-8 flex items-center gap-4">
+                <h1 className="text-3xl font-bold text-gray-800">編輯產品</h1>
+                <Link
+                    href="/admin/products/list"
+                    className="text-indigo-600 hover:text-indigo-800 text-sm"
+                >
+                    ← 返回產品列表
+                </Link>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-lg shadow-md">
-                {/* Product Image */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        產品圖片 *
-                    </label>
-                    <div className="flex items-start gap-4">
-                        <div className="flex items-center gap-3">
-                            {imagePreviews && imagePreviews.length > 0 && imagePreviews.map((src, idx) => (
-                                <div key={src + idx} className="relative w-24 h-24">
+                {/* Current Images */}
+                {existingImages.length > 0 && (
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            目前圖片
+                        </label>
+                        <div className="flex gap-3 mb-4">
+                            {existingImages.map((imageUrl, idx) => (
+                                <div key={idx} className="relative w-24 h-24">
                                     <Image
-                                        src={src}
-                                        alt={`Preview ${idx + 1}`}
+                                        src={imageUrl}
+                                        alt={`Current ${idx + 1}`}
                                         fill
                                         className="object-cover rounded-lg border-2 border-gray-200"
                                     />
                                     <button
                                         type="button"
-                                        onClick={() => {
-                                            // remove image at idx
-                                            setImages(prev => prev.filter((_, i) => i !== idx));
-                                            setImagePreviews(prev => {
-                                                try { URL.revokeObjectURL(prev[idx]); } catch (e) {}
-                                                return prev.filter((_, i) => i !== idx);
-                                            });
-                                        }}
+                                        onClick={() => removeExistingImage(idx)}
                                         className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                                     >
                                         <X size={14} />
                                     </button>
                                 </div>
                             ))}
+                        </div>
+                    </div>
+                )}
 
-                            {/* Add more / upload tile */}
+                {/* New Images */}
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        產品圖片 * ({totalImages}/6)
+                    </label>
+                    <div className="flex items-center gap-4">
+                        {imagePreviews.map((src, idx) => (
+                            <div key={idx} className="relative w-24 h-24">
+                                <Image
+                                    src={src}
+                                    alt={`New ${idx + 1}`}
+                                    fill
+                                    className="object-cover rounded-lg border-2 border-green-200"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => removeNewImage(idx)}
+                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                >
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        ))}
+
+                        {totalImages < 6 && (
                             <label className="w-32 h-32 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-indigo-500 transition">
                                 <Upload size={32} className="text-gray-400" />
-                                <span className="text-xs text-gray-500 mt-2">上傳圖片</span>
+                                <span className="text-xs text-gray-500 mt-2">新增圖片</span>
                                 <input
                                     type="file"
                                     accept="image/*"
@@ -262,12 +335,7 @@ export default function AddProductPage() {
                                     className="hidden"
                                 />
                             </label>
-                        </div>
-                        <div className="text-sm text-gray-500">
-                            <p>• 支援 JPG, PNG, GIF</p>
-                            <p>• 單張最大 10MB，最多 6 張</p>
-                            <p>• 建議尺寸 800x800</p>
-                        </div>
+                        )}
                     </div>
                 </div>
 
@@ -341,7 +409,7 @@ export default function AddProductPage() {
                 {/* Category */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                        產品分類 *
+                        產品分類 * (目前: {formData.category})
                     </label>
                     <select
                         name="category"
@@ -350,6 +418,7 @@ export default function AddProductPage() {
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         required
                     >
+                        <option value="">請選擇分類</option>
                         {categories.map(cat => (
                             <option key={cat.id || cat.name} value={cat.name}>{cat.name}</option>
                         ))}
@@ -380,22 +449,21 @@ export default function AddProductPage() {
                         {uploading ? (
                             <>
                                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                上傳中...
+                                更新中...
                             </>
                         ) : (
                             <>
-                                <Plus size={20} />
-                                添加產品
+                                <Save size={20} />
+                                更新產品
                             </>
                         )}
                     </button>
-                    <button
-                        type="button"
-                        onClick={() => router.push('/admin')}
-                        className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                    <Link
+                        href="/admin/products/list"
+                        className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition flex items-center justify-center"
                     >
                         取消
-                    </button>
+                    </Link>
                 </div>
             </form>
         </div>
