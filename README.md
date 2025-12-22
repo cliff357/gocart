@@ -16,6 +16,7 @@
 ## 📖 Table of Contents
 
 - [✨ Features](#-features)
+- [🎨 Color System](#-color-system)
 - [🛠️ Tech Stack](#-tech-stack)
 - [🚀 Getting Started](#-getting-started)
 - [🤝 Contributing](#-contributing)
@@ -30,12 +31,50 @@
 - **Vendor Dashboards:** Dedicated dashboards for vendors to manage products, view sales analytics, and track orders.
 - **Admin Panel:** A comprehensive dashboard for platform administrators to oversee vendors, products, and commissions.
 
+## 🎨 Color System <a name="-color-system"></a>
+
+GoCart features a **centralized color configuration system** that makes it easy to customize and maintain your site's color scheme.
+
+### 🚀 Quick Start
+
+Change your entire site's color scheme in 5 minutes:
+
+1. Open `lib/config/colors.js`
+2. Find `primary.500` (around line 16)
+3. Change it to your color: `'#your-color-here'`
+4. Restart the dev server: `npm run dev`
+5. Done! 🎉
+
+### 📚 Documentation
+
+- **[Quick Reference](QUICK_COLOR_REFERENCE.md)** - 5-minute guide to changing colors
+- **[Complete Guide](lib/config/COLOR_GUIDE.md)** - Detailed documentation
+- **[Color System Overview](README_COLOR_SYSTEM.md)** - System architecture and features
+- **[Available Themes](lib/config/themes.js)** - 8+ pre-built color themes
+- **[Current Colors](COLOR_PALETTE.md)** - Full color palette reference
+- **[Migration Guide](MIGRATION_GUIDE.md)** - Guide for updating existing code
+
+### 🎨 Pre-built Themes
+
+Choose from 8+ ready-to-use themes:
+- 🌿 Fresh Green (current)
+- 🔥 Vibrant Orange
+- 💼 Professional Blue
+- 💎 Elegant Purple
+- ❤️ Warm Red
+- 🌙 Deep Indigo
+- 💧 Fresh Cyan
+- 🎀 Soft Pink
+
+See [themes.js](lib/config/themes.js) for all options.
+
 ## 🛠️ Tech Stack <a name="-tech-stack"></a>
 
 - **Framework:** Next.js
 - **Styling:** Tailwind CSS
 - **UI Components:** Lucide React for icons
 - **State Management:** Redux Toolkit
+- **Color System:** Centralized configuration with theme support
 
 ## 🚀 Getting Started <a name="-getting-started"></a>
 
