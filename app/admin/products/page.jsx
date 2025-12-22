@@ -4,7 +4,7 @@
  * 管理員添加產品頁面
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
@@ -12,7 +12,7 @@ import { Upload, Plus, X } from 'lucide-react';
 import Image from 'next/image';
 import { storage } from '@/lib/firebase/config';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { productService } from '@/lib/services/FirestoreService';
+import { productService, categoryService } from '@/lib/services/FirestoreService';
 
 export default function AddProductPage() {
     const { isAdmin, loading } = useAuth();
@@ -23,30 +23,39 @@ export default function AddProductPage() {
         description: '',
         price: '',
         mrp: '',
-        category: '陶相架',
+        category: '',
         bestseller: false,
     });
+
+    const [categories, setCategories] = useState([])
+    const [catsLoading, setCatsLoading] = useState(true)
     
-    const [image, setImage] = useState(null);
-    const [imagePreview, setImagePreview] = useState(null);
+    const [images, setImages] = useState([]); // Array of File
+    const [imagePreviews, setImagePreviews] = useState([]); // Array of preview URLs
     const [uploading, setUploading] = useState(false);
 
-    // 分類選項
-    const categories = [
-        '陶相架',
-        '乜陶都有',
-        '陶盒子',
-        '陶磁',
-        '陶滕',
-        '老馬識陶',
-        '陶出魔幻紀',
-        '陶豬館',
-        '迷陶',
-        '女陶',
-        '怒陶',
-        '門陶',
-        '陶你滿門'
-    ];
+    // fetch categories from Firestore
+    useEffect(() => {
+        let mounted = true
+        const load = async () => {
+            try {
+                setCatsLoading(true)
+                const cats = await categoryService.getAll()
+                if (!mounted) return
+                setCategories(cats || [])
+                // set default category if none selected
+                if (!formData.category && (cats || []).length > 0) {
+                    setFormData(prev => ({ ...prev, category: cats[0].name }))
+                }
+            } catch (err) {
+                console.error('Failed to load categories', err)
+            } finally {
+                if (mounted) setCatsLoading(false)
+            }
+        }
+        load()
+        return () => { mounted = false }
+    }, [])
 
     // Redirect if not admin
     if (!loading && !isAdmin) {
@@ -74,21 +83,31 @@ export default function AddProductPage() {
 
     // Handle image selection
     const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            if (file.size > 10 * 1024 * 1024) {
-                toast.error('圖片大小不能超過 10MB');
-                return;
-            }
-            
-            if (!file.type.startsWith('image/')) {
-                toast.error('請選擇圖片檔案');
-                return;
-            }
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
 
-            setImage(file);
-            setImagePreview(URL.createObjectURL(file));
+        const maxFiles = 6; // limit number of uploads at once
+        const accepted = [];
+        const previews = [];
+
+        for (let i = 0; i < files.length && accepted.length < maxFiles; i++) {
+            const file = files[i];
+            if (!file.type.startsWith('image/')) {
+                toast.error(`${file.name} 不是圖片檔案`);
+                continue;
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                toast.error(`${file.name} 大小不能超過 10MB`);
+                continue;
+            }
+            accepted.push(file);
+            previews.push(URL.createObjectURL(file));
         }
+
+        if (accepted.length === 0) return;
+
+        setImages(prev => [...prev, ...accepted]);
+        setImagePreviews(prev => [...prev, ...previews]);
     };
 
 
@@ -127,17 +146,18 @@ export default function AddProductPage() {
             return;
         }
 
-        if (!image) {
-            toast.error('請選擇產品圖片');
+        if (!images || images.length === 0) {
+            toast.error('請選擇至少一張產品圖片');
             return;
         }
 
         setUploading(true);
 
         try {
-            // 1. Upload image
+            // 1. Upload images
             toast.loading('上傳圖片中...', { id: 'upload' });
-            const imageUrl = await uploadImageToStorage(image);
+            const uploadPromises = images.map(file => uploadImageToStorage(file));
+            const imageUrls = await Promise.all(uploadPromises);
             toast.success('圖片上傳成功', { id: 'upload' });
 
             // 2. Create product data
@@ -148,7 +168,7 @@ export default function AddProductPage() {
                 mrp: formData.mrp ? parseFloat(formData.mrp) : parseFloat(formData.price),
                 category: formData.category,
                 bestseller: formData.bestseller,
-                images: [imageUrl],
+                images: imageUrls,
                 inStock: true,
                 userId: 'admin', // 可以改成當前用戶 ID
                 storeId: 'admin_store', // 可以改成實際 store ID
@@ -168,8 +188,8 @@ export default function AddProductPage() {
                 category: '陶相架',
                 bestseller: false,
             });
-            setImage(null);
-            setImagePreview(null);
+            setImages([]);
+            setImagePreviews([]);
 
             // 5. Redirect to products list
             setTimeout(() => {
@@ -197,41 +217,49 @@ export default function AddProductPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         產品圖片 *
                     </label>
-                    <div className="flex items-center gap-4">
-                        {imagePreview ? (
-                            <div className="relative w-32 h-32">
-                                <Image
-                                    src={imagePreview}
-                                    alt="Preview"
-                                    fill
-                                    className="object-cover rounded-lg border-2 border-gray-200"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setImage(null);
-                                        setImagePreview(null);
-                                    }}
-                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                                >
-                                    <X size={16} />
-                                </button>
-                            </div>
-                        ) : (
+                    <div className="flex items-start gap-4">
+                        <div className="flex items-center gap-3">
+                            {imagePreviews && imagePreviews.length > 0 && imagePreviews.map((src, idx) => (
+                                <div key={src + idx} className="relative w-24 h-24">
+                                    <Image
+                                        src={src}
+                                        alt={`Preview ${idx + 1}`}
+                                        fill
+                                        className="object-cover rounded-lg border-2 border-gray-200"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            // remove image at idx
+                                            setImages(prev => prev.filter((_, i) => i !== idx));
+                                            setImagePreviews(prev => {
+                                                try { URL.revokeObjectURL(prev[idx]); } catch (e) {}
+                                                return prev.filter((_, i) => i !== idx);
+                                            });
+                                        }}
+                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                </div>
+                            ))}
+
+                            {/* Add more / upload tile */}
                             <label className="w-32 h-32 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-indigo-500 transition">
                                 <Upload size={32} className="text-gray-400" />
                                 <span className="text-xs text-gray-500 mt-2">上傳圖片</span>
                                 <input
                                     type="file"
                                     accept="image/*"
+                                    multiple
                                     onChange={handleImageChange}
                                     className="hidden"
                                 />
                             </label>
-                        )}
+                        </div>
                         <div className="text-sm text-gray-500">
                             <p>• 支援 JPG, PNG, GIF</p>
-                            <p>• 最大 10MB</p>
+                            <p>• 單張最大 10MB，最多 6 張</p>
                             <p>• 建議尺寸 800x800</p>
                         </div>
                     </div>
@@ -317,7 +345,7 @@ export default function AddProductPage() {
                         required
                     >
                         {categories.map(cat => (
-                            <option key={cat} value={cat}>{cat}</option>
+                            <option key={cat.id || cat.name} value={cat.name}>{cat.name}</option>
                         ))}
                     </select>
                 </div>

@@ -20,7 +20,7 @@ service firebase.storage {
     function isAdmin() {
       return isAuthenticated() && 
              firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
-             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
     
     // Validate file size (max 10MB)
@@ -36,6 +36,19 @@ service firebase.storage {
     // ============================================
     // Product Images
     // ============================================
+    // Flat structure for admin uploads: products/{fileName}
+    match /products/{fileName} {
+      // Everyone can read product images
+      allow read: if true;
+      
+      // Admins can upload product images
+      allow write: if isAdmin() && isValidSize() && isImage();
+      
+      // Admins can delete product images
+      allow delete: if isAdmin();
+    }
+    
+    // Nested structure: products/{productId}/{fileName}
     match /products/{productId}/{fileName} {
       // Everyone can read product images
       allow read: if true;
