@@ -6,238 +6,61 @@ service cloud.firestore {
     // Helper Functions
     // ============================================
     
-    // Check if user is authenticated
     function isAuthenticated() {
       return request.auth != null;
     }
     
-    // Check if user is admin
     function isAdmin() {
       return isAuthenticated() && 
              exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
     }
     
-    // ============================================
-    // Security Rules: 所有人可讀，只有 Admin 可寫
-    // ============================================
-    
-    // 所有集合：所有人可讀，只有 admin 可寫
-    match /{document=**} {
-      allow read: if true;           // 所有人可讀
-      allow write: if isAdmin();     // 只有 admin 可寫
-    }
-    
-    /* 
-    // ============================================
-    // Helper Functions
-    // ============================================
-    
-    // Check if user is authenticated
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-    
-    // Check if user owns the resource
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-    
-    // Check if user is admin
-    function isAdmin() {
+    // 檢查是否有待處理的邀請
+    function hasPendingInvite() {
       return isAuthenticated() && 
-             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-    
-    // Check if email is verified
-    function isEmailVerified() {
-      return isAuthenticated() && request.auth.token.email_verified == true;
-    }
-    
-    // Validate required fields in document
-    function hasRequiredFields(fields) {
-      return request.resource.data.keys().hasAll(fields);
+             exists(/databases/$(database)/documents/adminInvites/$(request.auth.token.email));
     }
     
     // ============================================
-    // Users Collection
+    // Users Collection - 只有受邀請用戶可創建
     // ============================================
     match /users/{userId} {
-      // Anyone can create their own user profile
+      allow read: if true;
+      
+      // 只有受邀請的用戶可以創建自己的文檔
       allow create: if isAuthenticated() && 
                        request.auth.uid == userId &&
-                       hasRequiredFields(['email', 'username', 'createdAt']);
+                       hasPendingInvite();
       
-      // Users can read their own profile, admins can read all
-      allow read: if isOwner(userId) || isAdmin();
+      // Admin 可以更新任何用戶，用戶可以更新自己
+      allow update: if isAdmin() || 
+                       (isAuthenticated() && request.auth.uid == userId);
       
-      // Users can update their own profile
-      allow update: if isOwner(userId) && 
-                       request.resource.data.email == resource.data.email; // Prevent email change
-      
-      // Only admins can delete users
       allow delete: if isAdmin();
     }
     
     // ============================================
-    // Stores Collection
+    // Admin Invites Collection - 特殊規則
     // ============================================
-    match /stores/{storeId} {
-      // Anyone can read approved stores
-      allow read: if resource.data.approved == true || 
-                     isOwner(resource.data.userId) || 
-                     isAdmin();
-      
-      // Authenticated users can create stores
-      allow create: if isAuthenticated() && 
-                       request.auth.uid == request.resource.data.userId &&
-                       hasRequiredFields(['name', 'userId', 'createdAt']) &&
-                       request.resource.data.approved == false; // Stores start as unapproved
-      
-      // Store owners can update their stores, admins can approve
-      allow update: if isOwner(resource.data.userId) || isAdmin();
-      
-      // Store owners and admins can delete stores
-      allow delete: if isOwner(resource.data.userId) || isAdmin();
-    }
-    
-    // ============================================
-    // Products Collection
-    // ============================================
-    match /products/{productId} {
-      // Everyone can read products
+    match /adminInvites/{inviteId} {
       allow read: if true;
       
-      // Only store owners can create products for their stores
-      allow create: if isAuthenticated() && 
-                       request.auth.uid == request.resource.data.userId &&
-                       hasRequiredFields(['name', 'price', 'storeId', 'userId', 'createdAt']) &&
-                       request.resource.data.price >= 0 && // Price must be non-negative
-                       exists(/databases/$(database)/documents/stores/$(request.resource.data.storeId));
+      // Admin 可以創建邀請
+      allow create: if isAdmin();
       
-      // Store owners can update their products
-      allow update: if isOwner(resource.data.userId) || isAdmin();
-      
-      // Store owners and admins can delete products
-      allow delete: if isOwner(resource.data.userId) || isAdmin();
+      // 被邀請的用戶可以刪除（接受邀請時）
+      allow delete: if isAdmin() || 
+                       (isAuthenticated() && 
+                        resource.data.email == request.auth.token.email);
     }
     
     // ============================================
-    // Orders Collection
-    // ============================================
-    match /orders/{orderId} {
-      // Users can read their own orders
-      // Store owners can read orders for their products
-      allow read: if isOwner(resource.data.userId) || 
-                     isOwner(resource.data.storeUserId) || 
-                     isAdmin();
-      
-      // Authenticated users can create orders
-      allow create: if isAuthenticated() && 
-                       request.auth.uid == request.resource.data.userId &&
-                       hasRequiredFields(['userId', 'items', 'total', 'status', 'createdAt']) &&
-                       request.resource.data.total >= 0 &&
-                       request.resource.data.status == 'pending';
-      
-      // Users can update their orders (e.g., cancel)
-      // Store owners can update order status (e.g., shipped)
-      allow update: if (isOwner(resource.data.userId) && 
-                        request.resource.data.status in ['pending', 'cancelled']) ||
-                       (isOwner(resource.data.storeUserId) && 
-                        request.resource.data.status in ['pending', 'processing', 'shipped', 'delivered']) ||
-                       isAdmin();
-      
-      // Only admins can delete orders
-      allow delete: if isAdmin();
-    }
-    
-    // ============================================
-    // Ratings Collection
-    // ============================================
-    match /ratings/{ratingId} {
-      // Everyone can read ratings
-      allow read: if true;
-      
-      // Authenticated users can create ratings
-      allow create: if isAuthenticated() && 
-                       request.auth.uid == request.resource.data.userId &&
-                       hasRequiredFields(['productId', 'userId', 'rating', 'createdAt']) &&
-                       request.resource.data.rating >= 1 && 
-                       request.resource.data.rating <= 5 &&
-                       exists(/databases/$(database)/documents/products/$(request.resource.data.productId));
-      
-      // Users can update their own ratings
-      allow update: if isOwner(resource.data.userId) &&
-                       request.resource.data.rating >= 1 && 
-                       request.resource.data.rating <= 5;
-      
-      // Users can delete their own ratings, admins can delete any
-      allow delete: if isOwner(resource.data.userId) || isAdmin();
-    }
-    
-    // ============================================
-    // Coupons Collection
-    // ============================================
-    match /coupons/{couponId} {
-      // Everyone can read active coupons
-      allow read: if resource.data.active == true || 
-                     isOwner(resource.data.storeId) || 
-                     isAdmin();
-      
-      // Only store owners can create coupons for their stores
-      allow create: if isAuthenticated() && 
-                       hasRequiredFields(['code', 'discount', 'storeId', 'expiresAt']) &&
-                       request.resource.data.discount >= 0 &&
-                       request.resource.data.discount <= 100;
-      
-      // Store owners can update their coupons
-      allow update: if isOwner(resource.data.storeUserId) || isAdmin();
-      
-      // Store owners and admins can delete coupons
-      allow delete: if isOwner(resource.data.storeUserId) || isAdmin();
-    }
-    
-    // ============================================
-    // Shopping Cart (User-specific)
-    // ============================================
-    match /carts/{userId} {
-      // Users can only access their own cart
-      allow read, write: if isOwner(userId);
-    }
-    
-    // ============================================
-    // Addresses Collection
-    // ============================================
-    match /addresses/{addressId} {
-      // Users can read their own addresses
-      allow read: if isOwner(resource.data.userId) || isAdmin();
-      
-      // Users can create their own addresses
-      allow create: if isAuthenticated() && 
-                       request.auth.uid == request.resource.data.userId &&
-                       hasRequiredFields(['userId', 'street', 'city', 'country']);
-      
-      // Users can update their own addresses
-      allow update: if isOwner(resource.data.userId);
-      
-      // Users can delete their own addresses
-      allow delete: if isOwner(resource.data.userId) || isAdmin();
-    }
-    
-    // ============================================
-    // Admin Collections (Admin Only)
-    // ============================================
-    match /admin/{document=**} {
-      allow read, write: if isAdmin();
-    }
-    
-    // ============================================
-    // Default: Deny All
+    // 其他所有集合：所有人可讀，只有 Admin 可寫
     // ============================================
     match /{document=**} {
-      allow read, write: if false;
+      allow read: if true;
+      allow write: if isAdmin();
     }
-    */
   }
 }

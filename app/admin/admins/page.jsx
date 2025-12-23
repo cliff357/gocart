@@ -100,8 +100,8 @@ export default function AdminManagementPage() {
         try {
             const emailToInvite = inviteEmail.toLowerCase().trim();
             
-            // 創建邀請記錄
-            const inviteRef = doc(collection(db, 'adminInvites'));
+            // 創建邀請記錄 - 使用 email 作為 Document ID
+            const inviteRef = doc(db, 'adminInvites', emailToInvite);
             await setDoc(inviteRef, {
                 email: emailToInvite,
                 invitedBy: user.email,
