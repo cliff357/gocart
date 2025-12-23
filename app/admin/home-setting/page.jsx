@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Upload, X, ImageIcon, Save, Loader2 } from 'lucide-react'
+import { Upload, X, ImageIcon, Save, Loader2, Move } from 'lucide-react'
 import Image from 'next/image'
 import { FirebaseStorageService } from '@/lib/firebase/storage'
 import { FirebaseFirestoreService } from '@/lib/firebase/firestore'
@@ -42,6 +42,11 @@ export default function HomeSettingPage() {
         top_right: null,
         bottom_right: null
     })
+    const [positions, setPositions] = useState({
+        main: { x: 50, y: 50 },
+        top_right: { x: 50, y: 50 },
+        bottom_right: { x: 50, y: 50 }
+    })
     const [uploading, setUploading] = useState({
         main: false,
         top_right: false,
@@ -68,13 +73,28 @@ export default function HomeSettingPage() {
     const loadBanners = async () => {
         try {
             const result = await FirebaseFirestoreService.getDocument('settings', 'home')
-            if (result.success && result.data && result.data.banners) {
-                setBanners(result.data.banners)
-                setPreviews(result.data.banners)
+            if (result.success && result.data) {
+                if (result.data.banners) {
+                    setBanners(result.data.banners)
+                    setPreviews(result.data.banners)
+                }
+                if (result.data.positions) {
+                    setPositions(prev => ({ ...prev, ...result.data.positions }))
+                }
             }
         } catch (error) {
             console.error('Error loading banners:', error)
         }
+    }
+
+    const handlePositionChange = (bannerId, axis, value) => {
+        setPositions(prev => ({
+            ...prev,
+            [bannerId]: {
+                ...prev[bannerId],
+                [axis]: parseInt(value)
+            }
+        }))
     }
 
     const handleFileSelect = async (bannerId, event) => {
@@ -135,6 +155,7 @@ export default function HomeSettingPage() {
         setBanners(prev => ({ ...prev, [bannerId]: null }))
         setPreviews(prev => ({ ...prev, [bannerId]: null }))
         setImageDimensions(prev => ({ ...prev, [bannerId]: null }))
+        setPositions(prev => ({ ...prev, [bannerId]: { x: 50, y: 50 } }))
         if (fileInputRefs[bannerId].current) {
             fileInputRefs[bannerId].current.value = ''
         }
@@ -145,6 +166,7 @@ export default function HomeSettingPage() {
         try {
             await FirebaseFirestoreService.setDocument('settings', 'home', {
                 banners,
+                positions,
                 updatedAt: new Date().toISOString()
             })
             toast.success('Banners saved successfully!')
@@ -222,6 +244,7 @@ export default function HomeSettingPage() {
                                             src={previews[config.id]}
                                             alt={config.label}
                                             className="w-full h-48 object-cover rounded-lg border border-slate-200"
+                                            style={{ objectPosition: `${positions[config.id].x}% ${positions[config.id].y}%` }}
                                         />
                                         <div 
                                             onClick={() => fileInputRefs[config.id].current?.click()}
@@ -252,6 +275,50 @@ export default function HomeSettingPage() {
                                     </div>
                                 )}
                             </div>
+
+                            {/* Position Controls */}
+                            {previews[config.id] && (
+                                <div className="w-48 flex flex-col gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <Move size={16} className="text-slate-400" />
+                                        <span className="text-sm text-slate-600 font-medium">Adjust Position</span>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-slate-500 mb-1 block">
+                                            Horizontal: {positions[config.id].x}%
+                                        </label>
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="100"
+                                            value={positions[config.id].x}
+                                            onChange={(e) => handlePositionChange(config.id, 'x', e.target.value)}
+                                            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-green-600"
+                                        />
+                                        <div className="flex justify-between text-xs text-slate-400 mt-1">
+                                            <span>Left</span>
+                                            <span>Right</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-slate-500 mb-1 block">
+                                            Vertical: {positions[config.id].y}%
+                                        </label>
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="100"
+                                            value={positions[config.id].y}
+                                            onChange={(e) => handlePositionChange(config.id, 'y', e.target.value)}
+                                            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-green-600"
+                                        />
+                                        <div className="flex justify-between text-xs text-slate-400 mt-1">
+                                            <span>Top</span>
+                                            <span>Bottom</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 ))}
@@ -263,11 +330,11 @@ export default function HomeSettingPage() {
                 <div className="bg-slate-100 rounded-xl p-6">
                     <div className="flex max-lg:flex-col gap-6">
                         {/* Main Banner Preview */}
-                        <div className="flex-1 bg-green-200 rounded-2xl h-64 flex items-center justify-center overflow-hidden">
+                        <div className="flex-1 bg-slate-200 rounded-2xl h-64 flex items-center justify-center overflow-hidden">
                             {previews.main ? (
-                                <img src={previews.main} alt="Main Banner" className="w-full h-full object-cover" />
+                                <img src={previews.main} alt="Main Banner" className="w-full h-full object-cover" style={{ objectPosition: `${positions.main.x}% ${positions.main.y}%` }} />
                             ) : (
-                                <div className="flex flex-col items-center text-green-600">
+                                <div className="flex flex-col items-center text-slate-400">
                                     <ImageIcon size={48} className="opacity-50" />
                                     <span className="text-sm mt-2">Main Banner</span>
                                 </div>
@@ -276,21 +343,21 @@ export default function HomeSettingPage() {
                         
                         {/* Right Side Banners */}
                         <div className="flex flex-col sm:flex-row lg:flex-col gap-4 lg:w-72">
-                            <div className="flex-1 bg-orange-200 rounded-2xl h-28 flex items-center justify-center overflow-hidden">
+                            <div className="flex-1 bg-slate-200 rounded-2xl h-28 flex items-center justify-center overflow-hidden">
                                 {previews.top_right ? (
-                                    <img src={previews.top_right} alt="Top Right Banner" className="w-full h-full object-cover" />
+                                    <img src={previews.top_right} alt="Top Right Banner" className="w-full h-full object-cover" style={{ objectPosition: `${positions.top_right.x}% ${positions.top_right.y}%` }} />
                                 ) : (
-                                    <div className="flex flex-col items-center text-orange-600">
+                                    <div className="flex flex-col items-center text-slate-400">
                                         <ImageIcon size={32} className="opacity-50" />
                                         <span className="text-xs mt-1">Top Right</span>
                                     </div>
                                 )}
                             </div>
-                            <div className="flex-1 bg-blue-200 rounded-2xl h-28 flex items-center justify-center overflow-hidden">
+                            <div className="flex-1 bg-slate-200 rounded-2xl h-28 flex items-center justify-center overflow-hidden">
                                 {previews.bottom_right ? (
-                                    <img src={previews.bottom_right} alt="Bottom Right Banner" className="w-full h-full object-cover" />
+                                    <img src={previews.bottom_right} alt="Bottom Right Banner" className="w-full h-full object-cover" style={{ objectPosition: `${positions.bottom_right.x}% ${positions.bottom_right.y}%` }} />
                                 ) : (
-                                    <div className="flex flex-col items-center text-blue-600">
+                                    <div className="flex flex-col items-center text-slate-400">
                                         <ImageIcon size={32} className="opacity-50" />
                                         <span className="text-xs mt-1">Bottom Right</span>
                                     </div>
