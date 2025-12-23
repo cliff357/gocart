@@ -142,7 +142,7 @@ export default function AdminLoginPage() {
                     </button>
                 </div>
 
-                {/* Logo & Title */
+                {/* Logo & Title */}
                 <div className="text-center space-y-4">
                     <div className="flex justify-center">
                         <Logo size={80} />
