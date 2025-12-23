@@ -1,8 +1,9 @@
 'use client'
 
-import { TagIcon, EarthIcon, UserIcon } from "lucide-react";
+import { TagIcon, EarthIcon, UserIcon, CalendarCheck } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
+import ReservationModal from "./ReservationModal";
 // Temporarily disabled cart functionality
 // import { addToCart } from "@/lib/features/cart/cartSlice";
 // import { useRouter } from "next/navigation";
@@ -20,6 +21,7 @@ const ProductDetails = ({ product }) => {
     // const router = useRouter()
 
     const [mainImage, setMainImage] = useState(product.images[0]);
+    const [showReservation, setShowReservation] = useState(false);
 
     // const addToCartHandler = () => {
     //     dispatch(addToCart({ productId }))
@@ -70,6 +72,16 @@ const ProductDetails = ({ product }) => {
                         {!cart[productId] ? 'Add to Cart' : 'View Cart'}
                     </button>
                 </div> */}
+                
+                {/* Reservation Button */}
+                <button 
+                    onClick={() => setShowReservation(true)}
+                    className="flex items-center gap-2 bg-green-600 text-white px-8 py-3 text-sm font-medium rounded-lg hover:bg-green-700 active:scale-95 transition mt-6"
+                >
+                    <CalendarCheck size={18} />
+                    預訂
+                </button>
+
                 <hr className="border-gray-300 my-5" />
                 <div className="flex flex-col gap-4 text-slate-500">
                     <p className="flex gap-3"> <EarthIcon className="text-slate-400" /> Free shipping worldwide </p>
@@ -77,6 +89,13 @@ const ProductDetails = ({ product }) => {
                 </div>
 
             </div>
+
+            {/* Reservation Modal */}
+            <ReservationModal 
+                isOpen={showReservation} 
+                onClose={() => setShowReservation(false)} 
+                product={product} 
+            />
         </div>
     )
 }

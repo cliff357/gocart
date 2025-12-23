@@ -54,6 +54,28 @@ service cloud.firestore {
                        (isAuthenticated() && 
                         resource.data.email == request.auth.token.email);
     }
+
+    // ============================================
+    // Reservations Collection - 訪客可創建預訂
+    // ============================================
+    match /reservations/{reservationId} {
+      // 任何人都可以讀取（用於確認頁面等）
+      allow read: if true;
+      
+      // 任何人都可以創建預訂（訪客預訂功能）
+      allow create: if true;
+      
+      // 只有 Admin 可以更新和刪除預訂
+      allow update, delete: if isAdmin();
+    }
+
+    // ============================================
+    // Settings Collection - 公開讀取
+    // ============================================
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
     
     // ============================================
     // 其他所有集合：所有人可讀，只有 Admin 可寫
