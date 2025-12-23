@@ -30,7 +30,8 @@ export default function AdminLoginPage() {
             const userData = result.userDoc;
             if (userData?.isAdmin) {
                 toast.success(`歡迎，陶豬管理員！`);
-                router.push('/admin');
+                // 使用 window.location 確保完整刷新
+                window.location.href = '/admin';
             } else {
                 toast.error('你沒有管理員權限');
             }
