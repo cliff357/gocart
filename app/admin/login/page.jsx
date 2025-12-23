@@ -4,72 +4,17 @@
  * 陶豬管理員登入頁面
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useAuth } from '@/lib/context/AuthContext';
 import { signInWithGoogle } from '@/lib/services/AuthService';
-import { LogIn, Shield, Info, Eye, EyeOff, RefreshCw } from 'lucide-react';
+import { LogIn, Shield } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import { auth, db } from '@/lib/firebase/config';
-import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import Logo from '@/components/Logo';
 
 export default function AdminLoginPage() {
-    const { isAuthenticated, isAdmin, loading, user, userDoc, authError } = useAuth();
+    const { isAuthenticated, isAdmin, loading } = useAuth();
     const router = useRouter();
-    const [showDebug, setShowDebug] = useState(false);
-    const [testResult, setTestResult] = useState(null);
-    const [testing, setTesting] = useState(false);
-
-    // 手動測試 Firestore 連接
-    const testFirestoreConnection = async () => {
-        setTesting(true);
-        setTestResult(null);
-        
-        try {
-            const results = [];
-            
-            // Test 1: 嘗試讀取 users collection
-            try {
-                const usersRef = collection(db, 'users');
-                const usersSnap = await getDocs(usersRef);
-                results.push(`✅ users collection: ${usersSnap.size} documents`);
-            } catch (e) {
-                results.push(`❌ users collection: ${e.code || e.message}`);
-            }
-            
-            // Test 2: 如果有 user，嘗試直接讀取該用戶文檔
-            if (user?.uid) {
-                try {
-                    const userDocRef = doc(db, 'users', user.uid);
-                    const userDocSnap = await getDoc(userDocRef);
-                    if (userDocSnap.exists()) {
-                        const data = userDocSnap.data();
-                        results.push(`✅ User doc exists: isAdmin=${data.isAdmin}, email=${data.email}`);
-                    } else {
-                        results.push(`❌ User doc NOT found for UID: ${user.uid}`);
-                    }
-                } catch (e) {
-                    results.push(`❌ User doc read error: ${e.code || e.message}`);
-                }
-            }
-            
-            // Test 3: 嘗試讀取 products collection
-            try {
-                const productsRef = collection(db, 'products');
-                const productsSnap = await getDocs(productsRef);
-                results.push(`✅ products collection: ${productsSnap.size} documents`);
-            } catch (e) {
-                results.push(`❌ products collection: ${e.code || e.message}`);
-            }
-            
-            setTestResult(results);
-        } catch (error) {
-            setTestResult([`❌ General error: ${error.message}`]);
-        } finally {
-            setTesting(false);
-        }
-    };
 
     useEffect(() => {
         // 如果已登入且是 admin，直接跳轉到 admin dashboard
@@ -88,8 +33,6 @@ export default function AdminLoginPage() {
                 router.push('/admin');
             } else {
                 toast.error('你沒有管理員權限');
-                // 可選：自動登出非管理員用戶
-                // await logOut();
             }
         } else {
             toast.error('登入失敗：' + result.error);
@@ -109,120 +52,7 @@ export default function AdminLoginPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-slate-100 px-4">
-            {/* Debug Panel - Full Width */}
-            {showDebug && (
-                <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-gray-50 border-b border-gray-200 shadow-lg max-h-96 overflow-y-auto">
-                    <div className="max-w-6xl mx-auto">
-                        <div className="flex items-center gap-2 mb-4">
-                            <Info className="text-blue-600" size={20} />
-                            <h2 className="text-lg font-medium text-gray-800">🔥 Firebase Debug Information</h2>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                            {/* Firebase Configuration */}
-                            <div className="p-3 bg-white rounded border">
-                                <h3 className="font-medium text-gray-800 mb-2">📋 Firebase Configuration</h3>
-                                <div className="space-y-1 font-mono text-xs">
-                                    <div><span className="text-blue-600">Project ID:</span> {process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}</div>
-                                    <div><span className="text-blue-600">Auth Domain:</span> {process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}</div>
-                                    <div><span className="text-blue-600">API Key:</span> {process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.slice(0, 20)}...</div>
-                                </div>
-                            </div>
-
-                            {/* Current User Status */}
-                            <div className="p-3 bg-white rounded border">
-                                <h3 className="font-medium text-gray-800 mb-2">👤 Current User Status</h3>
-                                <div className="space-y-1 font-mono text-xs">
-                                    <div><span className="text-blue-600">Authenticated:</span> {user ? '✅ Yes' : '❌ No'}</div>
-                                    <div><span className="text-blue-600">Email:</span> {user?.email || 'N/A'}</div>
-                                    <div><span className="text-blue-600">UID:</span> {user?.uid?.slice(0, 8) || 'N/A'}...</div>
-                                    <div><span className="text-blue-600">Is Admin:</span> {isAdmin ? '✅ Yes' : '❌ No'}</div>
-                                </div>
-                            </div>
-
-                            {/* User Document */}
-                            <div className="p-3 bg-white rounded border">
-                                <h3 className="font-medium text-gray-800 mb-2">📄 User Document</h3>
-                                <div className="space-y-1 font-mono text-xs">
-                                    {userDoc ? (
-                                        <>
-                                            <div><span className="text-blue-600">Document Found:</span> ✅ Yes</div>
-                                            <div><span className="text-blue-600">isAdmin Field:</span> {userDoc.isAdmin ? '✅ true' : '❌ false'}</div>
-                                            <div><span className="text-blue-600">Role Field:</span> {userDoc.role || 'N/A'}</div>
-                                            <div><span className="text-blue-600">Email Match:</span> {userDoc.email === user?.email ? '✅ Match' : '⚠️ Mismatch'}</div>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <div><span className="text-red-600">Document Found:</span> ❌ No</div>
-                                            {authError && (
-                                                <div><span className="text-red-600">Error:</span> {authError}</div>
-                                            )}
-                                            <div className="mt-2 text-yellow-600">💡 請在 Firebase Console 建立用戶文檔</div>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Runtime Information */}
-                            <div className="p-3 bg-white rounded border">
-                                <h3 className="font-medium text-gray-800 mb-2">⚡ Runtime Information</h3>
-                                <div className="space-y-1 font-mono text-xs">
-                                    <div><span className="text-blue-600">Auth Loading:</span> {loading ? '⏳ Loading' : '✅ Loaded'}</div>
-                                    <div><span className="text-blue-600">Current URL:</span> {typeof window !== 'undefined' ? window.location.hostname : 'N/A'}</div>
-                                    <div><span className="text-blue-600">Firebase App:</span> {auth?.app?.name || 'N/A'}</div>
-                                    <div><span className="text-blue-600">Timestamp:</span> {new Date().toLocaleString()}</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Raw Data */}
-                        <details className="mt-4">
-                            <summary className="cursor-pointer font-medium text-gray-700 hover:text-gray-900">🔍 Raw Data (Click to expand)</summary>
-                            <div className="mt-2 p-3 bg-gray-100 rounded text-xs font-mono overflow-auto max-h-32">
-                                <div><strong>User Object:</strong></div>
-                                <pre className="whitespace-pre-wrap">{JSON.stringify(user, null, 2)}</pre>
-                                <div className="mt-2"><strong>User Document:</strong></div>
-                                <pre className="whitespace-pre-wrap">{JSON.stringify(userDoc, null, 2)}</pre>
-                            </div>
-                        </details>
-
-                        {/* Manual Test Button */}
-                        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
-                            <h3 className="font-medium text-gray-800 mb-2">🧪 手動測試 Firestore</h3>
-                            <button
-                                onClick={testFirestoreConnection}
-                                disabled={testing}
-                                className="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded transition disabled:opacity-50"
-                            >
-                                <RefreshCw size={16} className={testing ? 'animate-spin' : ''} />
-                                {testing ? '測試中...' : '測試連接'}
-                            </button>
-                            {testResult && (
-                                <div className="mt-3 p-2 bg-white rounded border text-xs font-mono">
-                                    {testResult.map((line, i) => (
-                                        <div key={i} className={line.startsWith('✅') ? 'text-green-600' : 'text-red-600'}>
-                                            {line}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
-
             <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 space-y-8">
-                {/* Debug Toggle Button */}
-                <div className="text-center">
-                    <button
-                        onClick={() => setShowDebug(!showDebug)}
-                        className="inline-flex items-center gap-2 px-3 py-1 text-sm bg-slate-100 hover:bg-slate-200 rounded-lg transition text-slate-600 hover:text-slate-800"
-                    >
-                        {showDebug ? <EyeOff size={14} /> : <Eye size={14} />}
-                        {showDebug ? 'Hide' : 'Show'} Debug Info
-                    </button>
-                </div>
-
                 {/* Logo & Title */}
                 <div className="text-center space-y-4">
                     <div className="flex justify-center">
