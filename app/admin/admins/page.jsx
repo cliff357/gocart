@@ -98,17 +98,40 @@ export default function AdminManagementPage() {
         setInviting(true);
 
         try {
+            const emailToInvite = inviteEmail.toLowerCase().trim();
+            
             // 創建邀請記錄
             const inviteRef = doc(collection(db, 'adminInvites'));
             await setDoc(inviteRef, {
-                email: inviteEmail.toLowerCase().trim(),
+                email: emailToInvite,
                 invitedBy: user.email,
                 invitedByUid: user.uid,
                 status: 'pending',
                 createdAt: Timestamp.now(),
             });
 
-            toast.success(`已發送邀請給 ${inviteEmail}`);
+            // 發送邀請郵件
+            try {
+                const emailResponse = await fetch('/api/admin/invite', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: emailToInvite,
+                        invitedBy: user.email,
+                    }),
+                });
+                
+                if (emailResponse.ok) {
+                    toast.success(`邀請郵件已發送給 ${emailToInvite}`);
+                } else {
+                    // 邀請記錄已創建，但郵件發送失敗
+                    toast.success(`邀請已創建，但郵件發送失敗。請手動通知 ${emailToInvite}`);
+                }
+            } catch (emailError) {
+                console.error('Failed to send invite email:', emailError);
+                toast.success(`邀請已創建，但郵件發送失敗。請手動通知 ${emailToInvite}`);
+            }
+
             setInviteEmail('');
             await fetchPendingInvites();
         } catch (error) {
@@ -291,10 +314,14 @@ export default function AdminManagementPage() {
             <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
                 <h3 className="font-medium text-blue-800 mb-2">📌 如何邀請管理員？</h3>
                 <ol className="text-sm text-blue-700 space-y-1 list-decimal list-inside">
-                    <li>輸入朋友的 Gmail 地址並發送邀請</li>
-                    <li>請朋友用該 Gmail 帳號登入網站</li>
-                    <li>系統會自動授予管理員權限</li>
+                    <li>輸入朋友的 Email 地址並發送邀請</li>
+                    <li>朋友會收到一封邀請郵件，內含登入連結</li>
+                    <li>朋友點擊連結並用 <strong>該 Email 的 Google 帳號</strong> 登入</li>
+                    <li>系統會自動創建用戶資料並授予管理員權限</li>
                 </ol>
+                <p className="text-xs text-blue-600 mt-3">
+                    ⚠️ 注意：朋友必須使用被邀請的 Email 登入，使用其他帳號登入將不會獲得權限
+                </p>
             </div>
         </div>
     );
