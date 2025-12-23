@@ -7,16 +7,69 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/context/AuthContext';
 import { signInWithGoogle } from '@/lib/services/AuthService';
-import { LogIn, Shield, Info, Eye, EyeOff } from 'lucide-react';
+import { LogIn, Shield, Info, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import { auth } from '@/lib/firebase/config';
+import { auth, db } from '@/lib/firebase/config';
+import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import Logo from '@/components/Logo';
 
 export default function AdminLoginPage() {
     const { isAuthenticated, isAdmin, loading, user, userDoc, authError } = useAuth();
     const router = useRouter();
     const [showDebug, setShowDebug] = useState(false);
+    const [testResult, setTestResult] = useState(null);
+    const [testing, setTesting] = useState(false);
+
+    // 手動測試 Firestore 連接
+    const testFirestoreConnection = async () => {
+        setTesting(true);
+        setTestResult(null);
+        
+        try {
+            const results = [];
+            
+            // Test 1: 嘗試讀取 users collection
+            try {
+                const usersRef = collection(db, 'users');
+                const usersSnap = await getDocs(usersRef);
+                results.push(`✅ users collection: ${usersSnap.size} documents`);
+            } catch (e) {
+                results.push(`❌ users collection: ${e.code || e.message}`);
+            }
+            
+            // Test 2: 如果有 user，嘗試直接讀取該用戶文檔
+            if (user?.uid) {
+                try {
+                    const userDocRef = doc(db, 'users', user.uid);
+                    const userDocSnap = await getDoc(userDocRef);
+                    if (userDocSnap.exists()) {
+                        const data = userDocSnap.data();
+                        results.push(`✅ User doc exists: isAdmin=${data.isAdmin}, email=${data.email}`);
+                    } else {
+                        results.push(`❌ User doc NOT found for UID: ${user.uid}`);
+                    }
+                } catch (e) {
+                    results.push(`❌ User doc read error: ${e.code || e.message}`);
+                }
+            }
+            
+            // Test 3: 嘗試讀取 products collection
+            try {
+                const productsRef = collection(db, 'products');
+                const productsSnap = await getDocs(productsRef);
+                results.push(`✅ products collection: ${productsSnap.size} documents`);
+            } catch (e) {
+                results.push(`❌ products collection: ${e.code || e.message}`);
+            }
+            
+            setTestResult(results);
+        } catch (error) {
+            setTestResult([`❌ General error: ${error.message}`]);
+        } finally {
+            setTesting(false);
+        }
+    };
 
     useEffect(() => {
         // 如果已登入且是 admin，直接跳轉到 admin dashboard
@@ -132,6 +185,28 @@ export default function AdminLoginPage() {
                                 <pre className="whitespace-pre-wrap">{JSON.stringify(userDoc, null, 2)}</pre>
                             </div>
                         </details>
+
+                        {/* Manual Test Button */}
+                        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                            <h3 className="font-medium text-gray-800 mb-2">🧪 手動測試 Firestore</h3>
+                            <button
+                                onClick={testFirestoreConnection}
+                                disabled={testing}
+                                className="flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded transition disabled:opacity-50"
+                            >
+                                <RefreshCw size={16} className={testing ? 'animate-spin' : ''} />
+                                {testing ? '測試中...' : '測試連接'}
+                            </button>
+                            {testResult && (
+                                <div className="mt-3 p-2 bg-white rounded border text-xs font-mono">
+                                    {testResult.map((line, i) => (
+                                        <div key={i} className={line.startsWith('✅') ? 'text-green-600' : 'text-red-600'}>
+                                            {line}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
