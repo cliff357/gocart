@@ -1,5 +1,20 @@
 @import "tailwindcss";
 
+/* ===== 配色系統 CSS 變數 ===== */
+:root {
+    --color-background: #f5f0e8;
+    --color-text: #4a3c30;
+    --color-search-bar: #e8dfd2;
+    --color-dropdown: #f8f5f0;
+}
+
+/* 應用背景色到 body */
+body {
+    background-color: var(--color-background);
+    color: var(--color-text);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
 @layer components {
     @keyframes marqueeScroll {
         0% {

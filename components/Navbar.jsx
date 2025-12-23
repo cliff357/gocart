@@ -21,7 +21,7 @@ const Navbar = () => {
     }
 
     return (
-        <nav className="relative bg-white">
+        <nav className="relative" style={{ backgroundColor: 'var(--color-background)' }}>
             <div className="mx-6">
                 <div className="flex items-center justify-between max-w-7xl mx-auto py-4  transition-all">
 
@@ -30,15 +30,15 @@ const Navbar = () => {
                     </Link>
 
                     {/* Desktop Menu */}
-                    <div className="hidden sm:flex items-center gap-4 lg:gap-8 text-slate-600">
+                    <div className="hidden sm:flex items-center gap-4 lg:gap-8" style={{ color: 'var(--color-text)' }}>
                         <Link href="/">Home</Link>
                         <ShopDropdown />
                         <Link href="/">About</Link>
                         <Link href="/">Contact</Link>
 
-                        <form onSubmit={handleSearch} className="hidden xl:flex items-center w-xs text-sm gap-2 bg-slate-100 px-4 py-3 rounded-full">
-                            <Search size={18} className="text-slate-600" />
-                            <input className="w-full bg-transparent outline-none placeholder-slate-600" type="text" placeholder="Search products" value={search} onChange={(e) => setSearch(e.target.value)} required />
+                        <form onSubmit={handleSearch} className="hidden xl:flex items-center w-xs text-sm gap-2 px-4 py-3 rounded-full" style={{ backgroundColor: 'var(--color-search-bar)' }}>
+                            <Search size={18} style={{ color: 'var(--color-text)' }} />
+                            <input className="w-full bg-transparent outline-none" style={{ color: 'var(--color-text)' }} type="text" placeholder="Search products" value={search} onChange={(e) => setSearch(e.target.value)} required />
                         </form>
 
                         {/* Cart temporarily hidden */}
@@ -85,7 +85,7 @@ function ShopDropdown() {
             <li key={node.id} className="px-0 py-0">
                 {/* Main category - use same presentation as subcategories */}
                 <div className="pl-4 py-1">
-                    <Link href={`/shop?category=${encodeURIComponent(node.name)}`} className="text-sm text-slate-600 hover:bg-slate-100 block px-2 py-1 rounded">
+                    <Link href={`/shop?category=${encodeURIComponent(node.name)}`} className="text-sm hover:bg-slate-100 block px-2 py-1 rounded" style={{ color: 'var(--color-text)' }}>
                         {node.name}
                     </Link>
                 </div>
@@ -95,7 +95,7 @@ function ShopDropdown() {
                     <ul className="mt-1">
                         {node.children.map(child => (
                             <li key={child.id} className="pl-4 py-1">
-                                <Link href={`/shop?category=${encodeURIComponent(child.name)}`} className="text-sm text-slate-600 hover:bg-slate-100 block px-2 py-1 rounded">
+                                <Link href={`/shop?category=${encodeURIComponent(child.name)}`} className="text-sm hover:bg-slate-100 block px-2 py-1 rounded" style={{ color: 'var(--color-text)' }}>
                                     {child.name}
                                 </Link>
                             </li>
@@ -110,7 +110,7 @@ function ShopDropdown() {
         <div className="relative group">
             <Link href="/shop" className="inline-flex items-center relative z-10">Shop</Link>
 
-            <div className="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-150 absolute left-0 mt-0 -translate-y-1 w-56 bg-white border border-gray-200 rounded-md shadow-lg z-40 pointer-events-auto">
+            <div className="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-150 absolute left-0 mt-0 -translate-y-1 w-56 border border-gray-200 rounded-md shadow-lg z-40 pointer-events-auto" style={{ backgroundColor: 'var(--color-dropdown)' }}>
                 <ul className="py-2">
                     {renderTree(tree)}
                 </ul>

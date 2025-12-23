@@ -44,9 +44,9 @@ const Footer = () => {
     ]
 
     return (
-        <footer className="mx-6 bg-white">
+        <footer className="mx-6" style={{ backgroundColor: 'var(--color-background)' }}>
             <div className="max-w-7xl mx-auto">
-                <div className="flex flex-col md:flex-row items-start justify-between gap-10 py-10 border-b border-slate-500/30 text-slate-500">
+                <div className="flex flex-col md:flex-row items-start justify-between gap-10 py-10 border-b border-slate-500/30" style={{ color: 'var(--color-text)' }}>
                     <div>
                         <p className="max-w-[410px] mt-6 text-sm">Welcome to our marketplace, your ultimate destination for the latest and smartest gadgets. From smartphones and smartwatches to essential accessories, we bring you the best in innovation — all in one place.</p>
                         {/* Social media icons temporarily hidden */}
