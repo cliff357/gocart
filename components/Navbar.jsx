@@ -33,8 +33,8 @@ const Navbar = () => {
                     <div className="hidden sm:flex items-center gap-4 lg:gap-8" style={{ color: 'var(--color-text)' }}>
                         <Link href="/">Home</Link>
                         <ShopDropdown />
-                        <Link href="/">About</Link>
-                        <Link href="/">Contact</Link>
+                        <Link href="/about">About</Link>
+                        <Link href="/contact">Contact</Link>
 
                         <form onSubmit={handleSearch} className="hidden xl:flex items-center w-xs text-sm gap-2 px-4 py-3 rounded-full" style={{ backgroundColor: 'var(--color-search-bar)' }}>
                             <Search size={18} style={{ color: 'var(--color-text)' }} />

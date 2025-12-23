@@ -38,9 +38,9 @@ export async function POST(request) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                from: 'MyLoYau <noreply@loyaultyclub.com>',
+                from: 'LoyaultyClub <noreply@loyaultyclub.com>',
                 to: [email],
-                subject: '🎉 您已被邀請成為 MyLoYau 管理員',
+                subject: '🎉 您已被邀請成為 LoyaultyClub 管理員',
                 html: `
                     <!DOCTYPE html>
                     <html>
@@ -53,7 +53,7 @@ export async function POST(request) {
                             <div style="background: white; border-radius: 16px; padding: 40px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
                                 <!-- Logo -->
                                 <div style="text-align: center; margin-bottom: 30px;">
-                                    <h1 style="color: #4F46E5; font-size: 28px; margin: 0;">🐷 MyLoYau</h1>
+                                    <h1 style="color: #4F46E5; font-size: 28px; margin: 0;">🐷 LoyaultyClub</h1>
                                     <p style="color: #6B7280; margin-top: 8px;">陶豬管理系統</p>
                                 </div>
 
@@ -64,7 +64,7 @@ export async function POST(request) {
                                     </h2>
                                     
                                     <p style="color: #4B5563; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-                                        ${invitedBy ? `<strong>${invitedBy}</strong> 邀請您加入 MyLoYau 管理團隊。` : '您已被邀請加入 MyLoYau 管理團隊。'}
+                                        ${invitedBy ? `<strong>${invitedBy}</strong> 邀請您加入 LoyaultyClub 管理團隊。` : '您已被邀請加入 LoyaultyClub 管理團隊。'}
                                     </p>
 
                                     <div style="background: #EEF2FF; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
@@ -96,7 +96,7 @@ export async function POST(request) {
                                         此郵件由系統自動發送，請勿直接回覆。
                                     </p>
                                     <p style="color: #9CA3AF; font-size: 12px; margin-top: 8px;">
-                                        © ${new Date().getFullYear()} MyLoYau. All rights reserved.
+                                        © ${new Date().getFullYear()} LoyaultyClub. All rights reserved.
                                     </p>
                                 </div>
                             </div>

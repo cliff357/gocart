@@ -10,7 +10,7 @@ const Logo = ({
   return (
     <Image 
       src={assets.logo}
-      alt="MyLoYau"
+      alt="LoyaultyClub"
       width={size} 
       height={size}
       className={`object-contain ${className}`}
