@@ -122,6 +122,20 @@ service firebase.storage {
       // Only admins can delete public assets
       allow delete: if isAdmin();
     }
+
+    // ============================================
+    // Home Page Banners
+    // ============================================
+    match /banners/{fileName} {
+      // Everyone can read banners
+      allow read: if true;
+      
+      // Only admins can upload/update banners
+      allow write: if isAdmin() && isValidSize() && isImage();
+      
+      // Only admins can delete banners
+      allow delete: if isAdmin();
+    }
     
     // ============================================
     // Temporary Uploads
