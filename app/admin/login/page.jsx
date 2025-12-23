@@ -14,7 +14,7 @@ import { auth } from '@/lib/firebase/config';
 import Logo from '@/components/Logo';
 
 export default function AdminLoginPage() {
-    const { isAuthenticated, isAdmin, loading, user, userDoc } = useAuth();
+    const { isAuthenticated, isAdmin, loading, user, userDoc, authError } = useAuth();
     const router = useRouter();
     const [showDebug, setShowDebug] = useState(false);
 
@@ -99,7 +99,13 @@ export default function AdminLoginPage() {
                                             <div><span className="text-blue-600">Email Match:</span> {userDoc.email === user?.email ? '✅ Match' : '⚠️ Mismatch'}</div>
                                         </>
                                     ) : (
-                                        <div><span className="text-red-600">Document Found:</span> ❌ No (This is the problem!)</div>
+                                        <>
+                                            <div><span className="text-red-600">Document Found:</span> ❌ No</div>
+                                            {authError && (
+                                                <div><span className="text-red-600">Error:</span> {authError}</div>
+                                            )}
+                                            <div className="mt-2 text-yellow-600">💡 請在 Firebase Console 建立用戶文檔</div>
+                                        </>
                                     )}
                                 </div>
                             </div>
