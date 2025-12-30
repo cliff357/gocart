@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { FirebaseFirestoreService } from '@/lib/firebase/firestore'
 
 // Default timeline data
@@ -34,6 +34,83 @@ const DEFAULT_TIMELINE = [
         icon: '🎪'
     }
 ]
+
+// Timeline Item Component with scroll animation
+function TimelineItem({ item, index }) {
+    const [isVisible, setIsVisible] = useState(false)
+    const ref = useRef(null)
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setIsVisible(true)
+                    observer.unobserve(entry.target)
+                }
+            },
+            {
+                threshold: 0.2,
+                rootMargin: '0px 0px -50px 0px'
+            }
+        )
+
+        if (ref.current) {
+            observer.observe(ref.current)
+        }
+
+        return () => {
+            if (ref.current) {
+                observer.unobserve(ref.current)
+            }
+        }
+    }, [])
+
+    const isLeft = index % 2 === 0
+
+    return (
+        <div 
+            ref={ref}
+            className={`relative flex items-center ${isLeft ? 'flex-row' : 'flex-row-reverse'}`}
+        >
+            {/* Content */}
+            <div 
+                className={`w-5/12 ${isLeft ? 'text-right pr-8' : 'text-left pl-8'}`}
+                style={{
+                    opacity: isVisible ? 1 : 0,
+                    transform: isVisible 
+                        ? 'translateX(0)' 
+                        : isLeft 
+                            ? 'translateX(-60px)' 
+                            : 'translateX(60px)',
+                    transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transitionDelay: '0.1s'
+                }}
+            >
+                <div className={`bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow ${isLeft ? 'ml-auto' : 'mr-auto'}`}>
+                    <span className="text-sm text-[#9E4F1E] font-medium">{item.date}</span>
+                    <h3 className="text-lg font-bold text-slate-800 mt-1">{item.title}</h3>
+                    <p className="text-slate-500 text-sm mt-2">{item.description}</p>
+                </div>
+            </div>
+
+            {/* Center Icon */}
+            <div 
+                className="absolute left-1/2 transform -translate-x-1/2 w-12 h-12 bg-[#9E4F1E] rounded-full flex items-center justify-center text-2xl shadow-lg z-10"
+                style={{
+                    opacity: isVisible ? 1 : 0,
+                    transform: `translateX(-50%) scale(${isVisible ? 1 : 0.5})`,
+                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transitionDelay: '0.2s'
+                }}
+            >
+                {item.icon}
+            </div>
+
+            {/* Empty Space */}
+            <div className="w-5/12" />
+        </div>
+    )
+}
 
 export default function AboutPage() {
     const [timeline, setTimeline] = useState(DEFAULT_TIMELINE)
@@ -81,24 +158,7 @@ export default function AboutPage() {
                     {/* Timeline Items */}
                     <div className="space-y-12">
                         {timeline.map((item, index) => (
-                            <div key={item.id} className={`relative flex items-center ${index % 2 === 0 ? 'flex-row' : 'flex-row-reverse'}`}>
-                                {/* Content */}
-                                <div className={`w-5/12 ${index % 2 === 0 ? 'text-right pr-8' : 'text-left pl-8'}`}>
-                                    <div className={`bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition ${index % 2 === 0 ? 'ml-auto' : 'mr-auto'}`}>
-                                        <span className="text-sm text-[#9E4F1E] font-medium">{item.date}</span>
-                                        <h3 className="text-lg font-bold text-slate-800 mt-1">{item.title}</h3>
-                                        <p className="text-slate-500 text-sm mt-2">{item.description}</p>
-                                    </div>
-                                </div>
-
-                                {/* Center Icon */}
-                                <div className="absolute left-1/2 transform -translate-x-1/2 w-12 h-12 bg-[#9E4F1E] rounded-full flex items-center justify-center text-2xl shadow-lg z-10">
-                                    {item.icon}
-                                </div>
-
-                                {/* Empty Space */}
-                                <div className="w-5/12" />
-                            </div>
+                            <TimelineItem key={item.id} item={item} index={index} />
                         ))}
                     </div>
 
