@@ -254,9 +254,9 @@ export default function TodoPage() {
                 <div>
                     <h1 className="text-2xl font-semibold text-slate-800 flex items-center gap-3">
                         <ClipboardList className="text-green-600" />
-                        未來功能清單
+                        功能許願樹 🌳
                     </h1>
-                    <p className="text-slate-500 mt-1">記錄未來要開發嘅功能同改進</p>
+                    <p className="text-slate-500 mt-1">許個願，記錄未來想要嘅功能同改進</p>
                 </div>
                 <div className="flex items-center gap-3">
                     {saving && <Loader2 size={18} className="animate-spin text-slate-400" />}
