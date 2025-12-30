@@ -60,7 +60,6 @@ const Navbar = () => {
                             <Link href="/">Home</Link>
                             <ShopDropdown />
                             <Link href="/about">About</Link>
-                            <Link href="/contact">Contact</Link>
 
                             <form onSubmit={handleSearch} className="hidden xl:flex items-center w-xs text-sm gap-2 px-4 py-3 rounded-full" style={{ backgroundColor: 'var(--color-search-bar)' }}>
                                 <Search size={18} style={{ color: 'var(--color-text)' }} />
@@ -96,7 +95,6 @@ const Navbar = () => {
                         <Link href="/" onClick={closeMobileMenu} className="px-6 py-3 hover:bg-slate-100">Home</Link>
                         <Link href="/shop" onClick={closeMobileMenu} className="px-6 py-3 hover:bg-slate-100">Shop</Link>
                         <Link href="/about" onClick={closeMobileMenu} className="px-6 py-3 hover:bg-slate-100">About</Link>
-                        <Link href="/contact" onClick={closeMobileMenu} className="px-6 py-3 hover:bg-slate-100">Contact</Link>
                     </div>
                 </div>
             )}
