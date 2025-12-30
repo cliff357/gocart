@@ -1,15 +1,30 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { CalendarCheck, Mail, Phone, User, Package, Clock, CheckCircle, XCircle, Loader2 } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { CalendarCheck, Mail, Phone, User, Package, Clock, ChevronDown, Loader2, Info } from 'lucide-react'
 import { FirebaseFirestoreService } from '@/lib/firebase/firestore'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
 
+// Status workflow configuration
+const STATUS_CONFIG = [
+    { key: 'pending', label: '待處理', color: 'bg-yellow-100 text-yellow-700', step: 1 },
+    { key: 'confirmed', label: '已確認', color: 'bg-blue-100 text-blue-700', step: 2 },
+    { key: 'paid', label: '已付款', color: 'bg-purple-100 text-purple-700', step: 3 },
+    { key: 'shipped', label: '已寄出', color: 'bg-green-100 text-green-700', step: 4 },
+]
+
+const WORKFLOW_DESCRIPTION = `訂單流程：
+1️⃣ 待處理 - 收到新訂單，等待處理
+2️⃣ 已確認 - 已聯絡客人，發送付款 QR Code
+3️⃣ 已付款 - 客人已完成付款，開始製作產品
+4️⃣ 已寄出 - 產品製作完成，已寄出給客人`
+
 export default function ReservationsPage() {
     const [reservations, setReservations] = useState([])
     const [loading, setLoading] = useState(true)
-    const [filter, setFilter] = useState('all') // all, pending, confirmed, cancelled
+    const [filter, setFilter] = useState('all')
+    const [openDropdown, setOpenDropdown] = useState(null)
 
     useEffect(() => {
         loadReservations()
@@ -38,12 +53,15 @@ export default function ReservationsPage() {
     const updateStatus = async (reservationId, newStatus) => {
         try {
             await FirebaseFirestoreService.updateDocument('reservations', reservationId, {
-                status: newStatus
+                status: newStatus,
+                statusUpdatedAt: new Date().toISOString()
             })
             setReservations(prev => 
                 prev.map(r => r.id === reservationId ? { ...r, status: newStatus } : r)
             )
-            toast.success(`預訂狀態已更新為 ${getStatusLabel(newStatus)}`)
+            const statusLabel = STATUS_CONFIG.find(s => s.key === newStatus)?.label || newStatus
+            toast.success(`預訂狀態已更新為 ${statusLabel}`)
+            setOpenDropdown(null)
         } catch (error) {
             console.error('Error updating status:', error)
             toast.error('Failed to update status')
@@ -51,30 +69,36 @@ export default function ReservationsPage() {
     }
 
     const getStatusLabel = (status) => {
-        switch (status) {
-            case 'pending': return '待處理'
-            case 'confirmed': return '已確認'
-            case 'cancelled': return '已取消'
-            default: return status
-        }
+        return STATUS_CONFIG.find(s => s.key === status)?.label || status
     }
 
     const getStatusColor = (status) => {
-        switch (status) {
-            case 'pending': return 'bg-yellow-100 text-yellow-700'
-            case 'confirmed': return 'bg-green-100 text-green-700'
-            case 'cancelled': return 'bg-red-100 text-red-700'
-            default: return 'bg-slate-100 text-slate-700'
-        }
+        return STATUS_CONFIG.find(s => s.key === status)?.color || 'bg-slate-100 text-slate-700'
     }
 
     const filteredReservations = filter === 'all' 
         ? reservations 
         : reservations.filter(r => r.status === filter)
 
-    const formatDate = (dateString) => {
-        if (!dateString) return '-'
-        const date = new Date(dateString)
+    const formatDate = (dateValue) => {
+        if (!dateValue) return '-'
+        
+        let date
+        // Handle Firestore Timestamp
+        if (dateValue?.toDate && typeof dateValue.toDate === 'function') {
+            date = dateValue.toDate()
+        } 
+        // Handle Firestore Timestamp with seconds
+        else if (dateValue?.seconds) {
+            date = new Date(dateValue.seconds * 1000)
+        }
+        // Handle ISO string or other date formats
+        else {
+            date = new Date(dateValue)
+        }
+        
+        if (isNaN(date.getTime())) return '-'
+        
         return date.toLocaleDateString('zh-HK', { 
             year: 'numeric', 
             month: 'short', 
@@ -103,12 +127,10 @@ export default function ReservationsPage() {
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex gap-2 mb-6">
+            <div className="flex flex-wrap gap-2 mb-6">
                 {[
                     { key: 'all', label: '全部' },
-                    { key: 'pending', label: '待處理' },
-                    { key: 'confirmed', label: '已確認' },
-                    { key: 'cancelled', label: '已取消' }
+                    ...STATUS_CONFIG.map(s => ({ key: s.key, label: s.label }))
                 ].map(tab => (
                     <button
                         key={tab.key}
@@ -127,6 +149,17 @@ export default function ReservationsPage() {
                         )}
                     </button>
                 ))}
+                
+                {/* Workflow Info */}
+                <div className="relative group ml-auto">
+                    <button className="flex items-center gap-1 px-3 py-2 text-sm text-slate-500 hover:text-slate-700 transition">
+                        <Info size={16} />
+                        <span className="max-sm:hidden">訂單流程</span>
+                    </button>
+                    <div className="absolute right-0 top-full mt-2 w-80 bg-slate-800 text-white text-sm rounded-lg p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 shadow-xl">
+                        <p className="whitespace-pre-line">{WORKFLOW_DESCRIPTION}</p>
+                    </div>
+                </div>
             </div>
 
             {loading ? (
@@ -195,29 +228,41 @@ export default function ReservationsPage() {
                                 </div>
 
                                 {/* Status & Actions */}
-                                <div className="flex items-center gap-3">
-                                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(reservation.status)}`}>
-                                        {getStatusLabel(reservation.status)}
-                                    </span>
-                                    
-                                    {reservation.status === 'pending' && (
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => updateStatus(reservation.id, 'confirmed')}
-                                                className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition"
-                                                title="確認預訂"
-                                            >
-                                                <CheckCircle size={20} />
-                                            </button>
-                                            <button
-                                                onClick={() => updateStatus(reservation.id, 'cancelled')}
-                                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                                                title="取消預訂"
-                                            >
-                                                <XCircle size={20} />
-                                            </button>
-                                        </div>
-                                    )}
+                                <div className="flex items-center gap-3 relative">
+                                    {/* Status Dropdown */}
+                                    <div className="relative">
+                                        <button
+                                            onClick={() => setOpenDropdown(openDropdown === reservation.id ? null : reservation.id)}
+                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${getStatusColor(reservation.status)} hover:opacity-80 transition`}
+                                        >
+                                            {getStatusLabel(reservation.status)}
+                                            <ChevronDown size={14} />
+                                        </button>
+                                        
+                                        {openDropdown === reservation.id && (
+                                            <>
+                                                <div 
+                                                    className="fixed inset-0 z-40" 
+                                                    onClick={() => setOpenDropdown(null)}
+                                                />
+                                                <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50 py-1">
+                                                    {STATUS_CONFIG.map(status => (
+                                                        <button
+                                                            key={status.key}
+                                                            onClick={() => updateStatus(reservation.id, status.key)}
+                                                            className={`w-full flex items-center gap-3 px-4 py-2 text-left text-sm hover:bg-slate-50 transition ${
+                                                                reservation.status === status.key ? 'bg-slate-50' : ''
+                                                            }`}
+                                                        >
+                                                            <span className={`w-2 h-2 rounded-full ${status.color.replace('text-', 'bg-').split(' ')[0]}`} />
+                                                            <span>{status.label}</span>
+                                                            <span className="text-slate-400 text-xs ml-auto">Step {status.step}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
