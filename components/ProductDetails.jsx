@@ -84,7 +84,7 @@ const ProductDetails = ({ product }) => {
 
                 <hr className="border-gray-300 my-5" />
                 <div className="flex flex-col gap-4 text-slate-500">
-                    <p className="flex gap-3"> <EarthIcon className="text-slate-400" /> Free shipping worldwide </p>
+                    <p className="flex gap-3"> <EarthIcon className="text-slate-400" /> Free shipping on orders over $300 </p>
                     <p className="flex gap-3"> <UserIcon className="text-slate-400" /> Trusted by top brands </p>
                 </div>
 

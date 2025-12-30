@@ -1,5 +1,6 @@
 import { Outfit } from "next/font/google";
 import { Toaster } from "react-hot-toast";
+import { Analytics } from "@vercel/analytics/next";
 import StoreProvider from "@/app/StoreProvider";
 import FirebaseStatus from "@/components/FirebaseStatus";
 import { AuthProvider } from "@/lib/context/AuthContext";
@@ -37,6 +38,7 @@ export default function RootLayout({ children }) {
                         <FirebaseStatus />
                     </StoreProvider>
                 </AuthProvider>
+                {process.env.NODE_ENV === 'production' && <Analytics />}
             </body>
         </html>
     );
