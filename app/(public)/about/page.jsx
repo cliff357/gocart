@@ -70,35 +70,16 @@ function TimelineItem({ item, index }) {
     return (
         <div 
             ref={ref}
-            className={`relative flex items-center ${isLeft ? 'flex-row' : 'flex-row-reverse'}`}
+            className="relative"
         >
-            {/* Content */}
+            {/* Center Icon - positioned on the line */}
             <div 
-                className={`w-5/12 ${isLeft ? 'text-right pr-8' : 'text-left pl-8'}`}
+                className="absolute left-1/2 top-1/2 w-12 h-12 bg-[#9E4F1E] rounded-full flex items-center justify-center text-2xl shadow-lg z-10"
                 style={{
+                    marginLeft: '-24px',
+                    marginTop: '-24px',
                     opacity: isVisible ? 1 : 0,
-                    transform: isVisible 
-                        ? 'translateX(0)' 
-                        : isLeft 
-                            ? 'translateX(-60px)' 
-                            : 'translateX(60px)',
-                    transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
-                    transitionDelay: '0.1s'
-                }}
-            >
-                <div className={`bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow ${isLeft ? 'ml-auto' : 'mr-auto'}`}>
-                    <span className="text-sm text-[#9E4F1E] font-medium">{item.date}</span>
-                    <h3 className="text-lg font-bold text-slate-800 mt-1">{item.title}</h3>
-                    <p className="text-slate-500 text-sm mt-2">{item.description}</p>
-                </div>
-            </div>
-
-            {/* Center Icon */}
-            <div 
-                className="absolute left-1/2 transform -translate-x-1/2 w-12 h-12 bg-[#9E4F1E] rounded-full flex items-center justify-center text-2xl shadow-lg z-10"
-                style={{
-                    opacity: isVisible ? 1 : 0,
-                    transform: `translateX(-50%) scale(${isVisible ? 1 : 0.5})`,
+                    transform: `scale(${isVisible ? 1 : 0.5})`,
                     transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                     transitionDelay: '0.2s'
                 }}
@@ -106,8 +87,28 @@ function TimelineItem({ item, index }) {
                 {item.icon}
             </div>
 
-            {/* Empty Space */}
-            <div className="w-5/12" />
+            {/* Content - Left or Right */}
+            <div className={`flex ${isLeft ? 'justify-start' : 'justify-end'}`}>
+                <div 
+                    className={`w-5/12 ${isLeft ? 'pr-16 text-right' : 'pl-16 text-left'}`}
+                    style={{
+                        opacity: isVisible ? 1 : 0,
+                        transform: isVisible 
+                            ? 'translateX(0)' 
+                            : isLeft 
+                                ? 'translateX(-60px)' 
+                                : 'translateX(60px)',
+                        transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                        transitionDelay: '0.1s'
+                    }}
+                >
+                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+                        <span className="text-sm text-[#9E4F1E] font-medium">{item.date}</span>
+                        <h3 className="text-lg font-bold text-slate-800 mt-1">{item.title}</h3>
+                        <p className="text-slate-500 text-sm mt-2">{item.description}</p>
+                    </div>
+                </div>
+            </div>
         </div>
     )
 }
