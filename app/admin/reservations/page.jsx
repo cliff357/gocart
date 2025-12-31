@@ -196,6 +196,16 @@ export default function ReservationsPage() {
                                         <p className="text-sm text-green-600 font-medium">
                                             ${reservation.productPrice} × {reservation.quantity || 1}
                                         </p>
+                                        {/* Display selected options */}
+                                        {reservation.selectedOptions && Object.keys(reservation.selectedOptions).length > 0 && (
+                                            <div className="mt-1.5 flex flex-wrap gap-1.5">
+                                                {Object.entries(reservation.selectedOptions).map(([name, value]) => (
+                                                    <span key={name} className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded">
+                                                        {name}: {value}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 

@@ -1,9 +1,11 @@
 'use client'
 
 import { TagIcon, EarthIcon, UserIcon, CalendarCheck } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import ReservationModal from "./ReservationModal";
+import { productService } from "@/lib/services/FirestoreService";
 // Temporarily disabled cart functionality
 // import { addToCart } from "@/lib/features/cart/cartSlice";
 // import { useRouter } from "next/navigation";
@@ -22,6 +24,39 @@ const ProductDetails = ({ product }) => {
 
     const [mainImage, setMainImage] = useState(product.images[0]);
     const [showReservation, setShowReservation] = useState(false);
+    
+    // Related products (other variants)
+    const [relatedProductsData, setRelatedProductsData] = useState([]);
+    
+    // Product options selection (e.g., Size)
+    const [selectedOptions, setSelectedOptions] = useState(() => {
+        const initial = {};
+        if (product.options && product.options.length > 0) {
+            product.options.forEach(opt => {
+                if (opt.values && opt.values.length > 0) {
+                    initial[opt.name] = opt.values[0];
+                }
+            });
+        }
+        return initial;
+    });
+    
+    // Load related products
+    useEffect(() => {
+        const loadRelatedProducts = async () => {
+            if (product.relatedProducts && product.relatedProducts.length > 0) {
+                try {
+                    const products = await Promise.all(
+                        product.relatedProducts.map(id => productService.getById(id))
+                    );
+                    setRelatedProductsData(products.filter(p => p !== null));
+                } catch (error) {
+                    console.error('Failed to load related products:', error);
+                }
+            }
+        };
+        loadRelatedProducts();
+    }, [product.relatedProducts]);
 
     // const addToCartHandler = () => {
     //     dispatch(addToCart({ productId }))
@@ -58,6 +93,64 @@ const ProductDetails = ({ product }) => {
                         <p>Save {((product.mrp - product.price) / product.mrp * 100).toFixed(0)}% right now</p>
                     </div>
                 )}
+
+                {/* Related Products - Other Variants */}
+                {relatedProductsData.length > 0 && (
+                    <div className="mt-6">
+                        <p className="text-sm font-medium text-slate-700 mb-3">其他款式</p>
+                        <div className="flex flex-wrap gap-3">
+                            {relatedProductsData.map((relatedProduct) => (
+                                <Link
+                                    key={relatedProduct.id}
+                                    href={`/product/${relatedProduct.id}`}
+                                    className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition group"
+                                >
+                                    {relatedProduct.images?.[0] && (
+                                        <img 
+                                            src={relatedProduct.images[0]} 
+                                            alt={relatedProduct.name}
+                                            className="w-10 h-10 object-cover rounded"
+                                        />
+                                    )}
+                                    <span className="text-sm text-slate-700 group-hover:text-green-700">
+                                        {relatedProduct.name}
+                                    </span>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Product Options Selection (e.g., Size) */}
+                {product.options && product.options.length > 0 && (
+                    <div className="mt-6 space-y-4">
+                        {product.options.map((option, idx) => (
+                            <div key={idx}>
+                                <p className="text-sm font-medium text-slate-700 mb-2">{option.name}</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {option.values.map((value, vIdx) => (
+                                        <button
+                                            key={vIdx}
+                                            type="button"
+                                            onClick={() => setSelectedOptions(prev => ({
+                                                ...prev,
+                                                [option.name]: value
+                                            }))}
+                                            className={`px-4 py-2 rounded-lg border text-sm font-medium transition ${
+                                                selectedOptions[option.name] === value
+                                                    ? 'border-green-600 bg-green-50 text-green-700'
+                                                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                                            }`}
+                                        >
+                                            {value}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
                 {/* Cart functionality temporarily hidden */}
                 {/* <div className="flex items-end gap-5 mt-10">
                     {
@@ -94,7 +187,8 @@ const ProductDetails = ({ product }) => {
             <ReservationModal 
                 isOpen={showReservation} 
                 onClose={() => setShowReservation(false)} 
-                product={product} 
+                product={product}
+                selectedOptions={selectedOptions}
             />
         </div>
     )

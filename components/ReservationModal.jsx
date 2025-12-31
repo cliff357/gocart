@@ -5,7 +5,7 @@ import { X, Loader2, CheckCircle } from 'lucide-react'
 import { FirebaseFirestoreService } from '@/lib/firebase/firestore'
 import toast from 'react-hot-toast'
 
-export default function ReservationModal({ isOpen, onClose, product }) {
+export default function ReservationModal({ isOpen, onClose, product, selectedOptions = {} }) {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -50,6 +50,7 @@ export default function ReservationModal({ isOpen, onClose, product }) {
                 productName: product.name,
                 productPrice: product.price,
                 productImage: product.images?.[0] || null,
+                selectedOptions: Object.keys(selectedOptions).length > 0 ? selectedOptions : null,
                 status: 'pending',
                 createdAt: new Date().toISOString()
             })
@@ -96,7 +97,21 @@ export default function ReservationModal({ isOpen, onClose, product }) {
                 ) : (
                     <>
                         <h3 className="text-xl font-semibold text-slate-800 mb-2">預訂產品</h3>
-                        <p className="text-slate-500 text-sm mb-6">{product?.name}</p>
+                        <p className="text-slate-500 text-sm mb-2">{product?.name}</p>
+                        
+                        {/* Display selected options */}
+                        {Object.keys(selectedOptions).length > 0 && (
+                            <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                <p className="text-sm font-medium text-blue-800 mb-1">已選擇：</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {Object.entries(selectedOptions).map(([name, value]) => (
+                                        <span key={name} className="text-sm text-blue-700">
+                                            {name}: <span className="font-medium">{value}</span>
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                             <div>
