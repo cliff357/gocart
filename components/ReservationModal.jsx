@@ -54,6 +54,28 @@ export default function ReservationModal({ isOpen, onClose, product, selectedOpt
                 status: 'pending',
                 createdAt: new Date().toISOString()
             })
+            
+            // Send email notification to admin
+            try {
+                await fetch('/api/notifications/new-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        productName: product.name,
+                        productPrice: product.price,
+                        quantity: parseInt(formData.quantity),
+                        customerName: formData.name,
+                        customerEmail: formData.email || null,
+                        customerPhone: formData.phone || null,
+                        selectedOptions: Object.keys(selectedOptions).length > 0 ? selectedOptions : null,
+                        productImage: product.images?.[0] || null
+                    })
+                })
+            } catch (emailError) {
+                console.error('Email notification failed:', emailError)
+                // Don't fail the reservation if email fails
+            }
+            
             setSubmitted(true)
             toast.success('預訂成功！')
         } catch (error) {
