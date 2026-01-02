@@ -4,9 +4,11 @@
  */
 
 import { NextResponse } from 'next/server';
+import { db } from '@/lib/firebase/config';
+import { doc, getDoc } from 'firebase/firestore';
 
-// Admin email for receiving order notifications
-const ADMIN_EMAIL = 'cliffchan1993@gmail.com';
+// Default admin email for receiving order notifications
+const DEFAULT_EMAIL = 'cliffchan1993@gmail.com';
 
 export async function POST(request) {
     try {
@@ -38,6 +40,35 @@ export async function POST(request) {
                 { error: 'Email 服務未配置' },
                 { status: 500 }
             );
+        }
+
+        // Get notification settings from Firestore
+        let recipients = [DEFAULT_EMAIL];
+        let notificationsEnabled = true;
+        
+        try {
+            const settingsDoc = await getDoc(doc(db, 'settings', 'notifications'));
+            if (settingsDoc.exists()) {
+                const settings = settingsDoc.data();
+                
+                // Check if notifications are enabled
+                if (settings.enabled === false) {
+                    console.log('Email notifications are disabled');
+                    return NextResponse.json({ success: true, skipped: true });
+                }
+                
+                // Determine environment and get appropriate recipients
+                const isProduction = process.env.VERCEL_ENV === 'production';
+                
+                if (isProduction && settings.productionEmails?.length > 0) {
+                    recipients = settings.productionEmails;
+                } else if (!isProduction && settings.testingEmails?.length > 0) {
+                    recipients = settings.testingEmails;
+                }
+            }
+        } catch (err) {
+            console.error('Failed to load notification settings:', err);
+            // Continue with default recipient
         }
 
         // Format selected options
@@ -119,7 +150,7 @@ export async function POST(request) {
             },
             body: JSON.stringify({
                 from: 'LoyaultyClub <noreply@loyaultyclub.com>',
-                to: [ADMIN_EMAIL],
+                to: recipients,
                 subject: `新訂單：${productName}`,
                 html: adminEmailHtml,
             }),

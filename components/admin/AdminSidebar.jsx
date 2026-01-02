@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname } from "next/navigation"
-import { HomeIcon, PlusCircle, Tag, Package, Users, Layout, CalendarCheck, ClipboardList, History } from "lucide-react"
+import { HomeIcon, PlusCircle, Tag, Package, Users, Layout, CalendarCheck, ClipboardList, History, Bell } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { assets } from "@/assets/assets"
@@ -19,6 +19,7 @@ const AdminSidebar = () => {
         { name: 'Add Product', href: '/admin/products', icon: PlusCircle },
         { name: 'Edit Categories', href: '/admin/categories', icon: Tag },
         { name: 'Manage Admins', href: '/admin/admins', icon: Users },
+        { name: 'Notifications', href: '/admin/notifications', icon: Bell },
         { name: '功能許願樹', href: '/admin/todo', icon: ClipboardList },
     ]
 
