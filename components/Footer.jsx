@@ -11,8 +11,8 @@ const Footer = () => {
         const loadCategories = async () => {
             try {
                 const cats = await categoryService.getAll();
-                const mainCats = cats.filter(c => !c.parentId);
-                setCategories(mainCats);
+                // Show all categories (main + sub)
+                setCategories(cats);
             } catch (err) {
                 console.error('Failed to load categories for footer', err);
             }

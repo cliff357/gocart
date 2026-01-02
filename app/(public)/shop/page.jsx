@@ -1,9 +1,10 @@
 'use client'
-import { Suspense } from "react"
+import { Suspense, useState, useEffect } from "react"
 import ProductCard from "@/components/ProductCard"
 import { MoveLeftIcon } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useSelector } from "react-redux"
+import { categoryService } from "@/lib/services/FirestoreService"
 
  function ShopContent() {
 
@@ -14,6 +15,28 @@ import { useSelector } from "react-redux"
     const router = useRouter()
 
     const products = useSelector(state => state.product.list)
+    
+    // Get category name from ID
+    const [categoryName, setCategoryName] = useState('')
+    
+    useEffect(() => {
+        const loadCategoryName = async () => {
+            if (category) {
+                try {
+                    const cat = await categoryService.getById(category);
+                    if (cat) {
+                        setCategoryName(cat.name);
+                    } else {
+                        setCategoryName(category); // Fallback to ID if not found
+                    }
+                } catch (err) {
+                    console.error('Failed to load category:', err);
+                    setCategoryName(category);
+                }
+            }
+        };
+        loadCategoryName();
+    }, [category]);
 
     let filteredProducts = products;
 
@@ -33,7 +56,7 @@ import { useSelector } from "react-redux"
                 <h1 onClick={() => router.push('/shop')} className="text-2xl text-slate-500 my-6 flex items-center gap-2 cursor-pointer">
                     {search && <MoveLeftIcon size={20} />}  
                     {category ? (
-                        <>Category: <span className="text-slate-700 font-medium">{category}</span></>
+                        <>Category: <span className="text-slate-700 font-medium">{categoryName || 'Loading...'}</span></>
                     ) : (
                         <>All <span className="text-slate-700 font-medium">Products</span></>
                     )}
