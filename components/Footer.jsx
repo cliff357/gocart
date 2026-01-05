@@ -32,7 +32,7 @@ const Footer = () => {
                         <ul className="space-y-2 text-sm text-white/70">
                             {categories.map(cat => (
                                 <li key={cat.id}>
-                                    <Link href={`/shop?category=${cat.id}`} className="hover:text-white transition">
+                                    <Link href={`/shop?category=${encodeURIComponent(cat.name)}`} className="hover:text-white transition">
                                         {cat.name}
                                     </Link>
                                 </li>
