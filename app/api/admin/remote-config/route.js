@@ -1,10 +1,13 @@
 /**
  * Remote Config API
  * 用於更新 Firebase Remote Config 的顏色設定
+ * 
+ * 🔐 POST 需要 Admin 認證，GET 公開
  */
 
 import { NextResponse } from 'next/server';
 import admin from 'firebase-admin';
+import { verifyAdminRequest } from '@/lib/auth/server';
 
 // 初始化 Firebase Admin SDK
 function getAdminApp() {
@@ -36,6 +39,15 @@ function getAdminApp() {
 }
 
 export async function POST(request) {
+    // 🔐 驗證 Admin 權限
+    const authResult = await verifyAdminRequest(request);
+    if (!authResult.success) {
+        return NextResponse.json(
+            { error: authResult.error },
+            { status: authResult.status }
+        );
+    }
+
     try {
         const { colors } = await request.json();
         

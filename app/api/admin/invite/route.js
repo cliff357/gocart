@@ -1,11 +1,23 @@
 /**
  * Admin Invite Email API
  * 發送管理員邀請郵件
+ * 
+ * 🔐 需要 Admin 認證
  */
 
 import { NextResponse } from 'next/server';
+import { verifyAdminRequest } from '@/lib/auth/server';
 
 export async function POST(request) {
+    // 🔐 驗證 Admin 權限
+    const authResult = await verifyAdminRequest(request);
+    if (!authResult.success) {
+        return NextResponse.json(
+            { error: authResult.error },
+            { status: authResult.status }
+        );
+    }
+
     try {
         const { email, invitedBy } = await request.json();
 
