@@ -245,6 +245,10 @@ describe('ProductCard 組件', () => {
         name: '測試商品',
         price: 100,
         images: ['/test-image.jpg'],
+        rating: [
+            { rating: 5 },
+            { rating: 4 },
+        ],
     };
 
     it('應該顯示商品名稱', () => {
