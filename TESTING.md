@@ -1,13 +1,13 @@
 # 🧪 LoyaultyClub 測試文檔
 
 > 📅 創建日期：2026年2月5日  
-> 📅 最後更新：2026年2月6日  
+> 📅 最後更新：2026年2月11日  
 > 👤 負責人：SA Team  
 > 📦 項目：LoyaultyClub (老友賣蘿柚企劃)
 
 ---
 
-## 📋 兩日工作總結 (2月5-6日)
+## 📋 工作總結 (2月5-11日)
 
 ### 🎯 為什麼要做這些改動？
 
@@ -40,6 +40,10 @@
 | 2/6 | 創建 Service CRUD 測試 (25 tests) | ✅ |
 | 2/6 | 創建 GitHub Actions CI/CD | ✅ |
 | 2/6 | 創建 UI 組件測試 (25 tests) | ✅ |
+| 2/11 | 修復 Next.js 安全漏洞 (CVE-2025-66478) | ✅ |
+| 2/11 | 重寫測試配合新 firestore.rules | ✅ |
+| 2/11 | 修復 firestore.rules 安全漏洞 | ✅ |
+| 2/11 | 所有測試通過 (79 tests) | ✅ |
 
 ---
 
@@ -50,13 +54,25 @@ __tests__/
 ├── components/
 │   └── ui-components.test.jsx    # 25 個組件測試
 ├── emulator/
-│   ├── firestore-rules.test.js   # 24 個權限測試
-│   └── firestore-crud.test.js    # 25 個 CRUD 測試
+│   ├── firestore-rules.test.js   # 36 個權限測試
+│   └── firestore-crud.test.js    # 18 個 CRUD 測試
 └── utils/
     └── test-utils.js             # 測試工具
 ```
 
-**總計：74 個測試全部通過 ✅**
+**總計：79 個測試全部通過 ✅**
+
+---
+
+## 🔒 2月11日安全修復
+
+### 1. Next.js CVE-2025-66478
+- **問題**：Next.js 15.3.5 存在安全漏洞
+- **解決**：升級至 Next.js 16.1.6
+
+### 2. Firestore Rules - 商品創建漏洞
+- **問題**：任何用戶可以為任何商店創建商品（缺少擁有權檢查）
+- **解決**：添加 `get(...).data.userId == request.auth.uid` 驗證商店擁有權
 
 ---
 
@@ -66,87 +82,117 @@ __tests__/
 
 測試你的 `firestore.rules` 是否正確設置權限。
 
-#### Products (7 tests)
-| 測試 | 描述 |
-|------|------|
-| 任何人可讀 | 未登入用戶可以讀取商品列表 |
-| Admin 可寫 | 管理員可以新增/修改商品 |
-| 普通用戶不可寫 | 非管理員不能修改商品 |
-| 訪客不可寫 | 未登入用戶不能新增商品 |
-| Admin 可刪 | 管理員可以刪除商品 |
-| 非 Admin 不可刪 | 普通用戶不能刪除商品 |
-| 任何人可查詢 | 可以 query 商品列表 |
+> ⚠️ **2月11日更新**：測試已重寫以配合新的 store-based 多商戶架構
+> - 使用 `role: 'admin'` 而非 `isAdmin: true`
+> - 添加 `isOwner()` 商店擁有權檢查
 
-#### Users (4 tests)
+#### Users Collection (9 tests)
 | 測試 | 描述 |
 |------|------|
-| 任何人可讀 | 可以讀取用戶資料（用於顯示用戶名等） |
-| 非 Admin 不可寫 | 普通用戶不能創建用戶記錄 |
-| 非 Admin 不可改 | 普通用戶不能修改用戶資料 |
-| 普通用戶不可刪 | 只有 Admin 可以刪除用戶 |
+| 已登入用戶可創建自己的 profile | 用戶可以創建自己的資料 |
+| 不能為別人創建 profile | 不能冒充其他用戶 |
+| 用戶可讀取自己的資料 | 基本隱私保護 |
+| 用戶不能讀取其他人的資料 | 用戶資料不公開 |
+| Admin 可讀取所有用戶 | 管理員權限 |
+| 用戶可更新自己的資料 | 允許修改個人資料 |
+| 用戶不能更新別人的資料 | 防止越權修改 |
+| Admin 可刪除用戶 | 管理員可管理用戶 |
+| 普通用戶不能刪除用戶 | 防止越權刪除 |
 
-#### Orders (4 tests)
+#### Products Collection (7 tests)
 | 測試 | 描述 |
 |------|------|
-| 任何人可讀 | 可以讀取訂單 |
-| 非 Admin 不可創建 | 只有 Admin 可以創建訂單 |
-| 非 Admin 不可更新 | 只有 Admin 可以更新訂單狀態 |
-| 非 Admin 不可刪除 | 只有 Admin 可以刪除訂單 |
+| 任何人可讀商品 | 商品列表公開 |
+| 商店擁有者可創建商品 | 只有自己商店的商品 |
+| 不能為別人的商店創建商品 | 🆕 修復的安全漏洞 |
+| 商品擁有者可更新商品 | 允許修改自己的商品 |
+| 非擁有者不能更新商品 | 防止越權修改 |
+| 商品擁有者可刪除商品 | 允許刪除自己的商品 |
+| Admin 可刪除任何商品 | 管理員權限 |
 
-#### Reservations (5 tests)
+#### Orders Collection (5 tests)
 | 測試 | 描述 |
 |------|------|
-| 任何人可創建 | 訪客可以創建預訂（公開功能） |
-| 登入用戶可創建 | 登入用戶也可以預訂 |
-| 任何人可讀 | 可以讀取預訂資料 |
-| 非 Admin 不可更新 | 只有 Admin 可以確認/取消預訂 |
-| 非 Admin 不可刪除 | 只有 Admin 可以刪除預訂 |
+| 用戶可創建訂單 | 購物功能 |
+| 用戶可讀自己的訂單 | 訂單歷史 |
+| 不能讀別人的訂單 | 訂單隱私 |
+| Admin 可讀所有訂單 | 管理員權限 |
+| Admin 可刪除訂單 | 管理員權限 |
 
-#### AdminInvites (4 tests)
+#### Ratings Collection (4 tests)
 | 測試 | 描述 |
 |------|------|
-| 任何人可讀 | 用於驗證邀請碼 |
-| 非 Admin 不可創建 | 只有 Admin 可以發邀請 |
-| 非 Admin 不可更新 | 只有 Admin 可以更新邀請狀態 |
-| 非 Admin 不可刪除 | 只有 Admin 可以刪除邀請 |
+| 任何人可讀評分 | 評分公開 |
+| 登入用戶可創建評分 | 評分功能 |
+| 評分必須 1-5 分 | 數據驗證 |
+| Admin 可刪除評分 | 管理員權限 |
+
+#### Carts Collection (2 tests)
+| 測試 | 描述 |
+|------|------|
+| 用戶可讀寫自己的購物車 | 購物車功能 |
+| 不能讀寫別人的購物車 | 購物車隱私 |
+
+#### Addresses Collection (3 tests)
+| 測試 | 描述 |
+|------|------|
+| 用戶可創建自己的地址 | 地址管理 |
+| 用戶可讀自己的地址 | 地址查詢 |
+| 不能讀別人的地址 | 地址隱私 |
+
+#### Admin Collection (2 tests)
+| 測試 | 描述 |
+|------|------|
+| Admin 可讀 admin 集合 | 管理員設定 |
+| 普通用戶不能讀 admin 集合 | 防止越權 |
+
+#### Default Deny (1 test)
+| 測試 | 描述 |
+|------|------|
+| 未定義的 collection 拒絕訪問 | 默認安全 |
 
 ---
 
 ### 2. Service CRUD 測試 (firestore-crud.test.js)
 
-測試 Firestore 的 CRUD 操作是否正常運作。
+測試 Firestore 的 CRUD 操作是否正常運作。使用 `withSecurityRulesDisabled` 繞過權限測試純數據操作。
 
-#### Products CRUD (6 tests)
+#### Users CRUD (4 tests)
+- 創建用戶
+- 按 role 查詢
+- 更新用戶
+- 刪除用戶
+
+#### Stores CRUD (2 tests)
+- 創建商店
+- 查詢已批准商店
+
+#### Products CRUD (3 tests)
 - 創建商品
-- 讀取商品
-- 更新商品
-- 刪除商品
-- 按分類查詢
-- 限制查詢數量 (pagination)
-
-#### Users CRUD (3 tests)
-- 讀取用戶
-- 按 email 查詢
-- 查詢 Admin 用戶
+- 按商店查詢
+- 更新價格
 
 #### Orders CRUD (3 tests)
 - 創建訂單
-- 訂單結構驗證
 - 按狀態查詢
+- 更新狀態
 
-#### Reservations CRUD (3 tests)
-- 訪客創建預訂
-- 讀取預訂
-- Admin 更新預訂狀態
+#### Ratings CRUD (3 tests)
+- 創建評分
+- 按商品查詢
+- 計算平均評分
 
 #### Coupons CRUD (2 tests)
 - 創建優惠券
-- 查詢公開優惠券
+- 查詢有效優惠券
 
-#### Categories CRUD (3 tests)
-- 創建分類
-- 查詢根分類
-- 查詢子分類
+#### Carts CRUD (2 tests)
+- 創建購物車
+- 更新購物車
+
+#### Addresses CRUD (2 tests)
+- 創建地址
+- 按用戶查詢
 
 #### Ratings CRUD (3 tests)
 - 創建評分
@@ -247,9 +293,11 @@ Push 到 GitHub 後會自動：
 
 | 優先級 | 任務 | 狀態 |
 |--------|------|------|
-| P1 | 組件測試 (ProductCard, Navbar 等) | ⏳ |
-| P2 | API Route 測試 | ⏳ |
-| P3 | E2E 測試 (Cypress/Playwright) | ⏳ |
+| P0 | CI/CD 測試通過 → Merge PR | ✅ |
+| P1 | 更多 UI 組件測試 (Navbar, Footer 等) | ⏳ |
+| P2 | Redux Slice 測試 (cart, product 等) | ⏳ |
+| P3 | API Route 測試 | ⏳ |
+| P4 | E2E 測試 (Cypress/Playwright) | ⏳ |
 
 ---
 
@@ -259,7 +307,7 @@ Push 到 GitHub 後會自動：
 A: Mock 測試只測試你的假設，不測試真實行為。如果 Firebase API 改了，Mock 不會發現問題。
 
 ### Q: Emulator 測試慢嗎？
-A: 49 個測試只需 ~2 秒，非常快。
+A: 54 個測試只需 ~2.5 秒，非常快。
 
 ### Q: CI/CD 需要真實 Firebase 密鑰嗎？
 A: 不需要！Emulator 使用 `demo-` 開頭的 Project ID，完全離線運行。
