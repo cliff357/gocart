@@ -83,11 +83,13 @@ service cloud.firestore {
       allow read: if true;
       
       // Only store owners can create products for their stores
+      // Must verify that the user owns the store they're creating products for
       allow create: if isAuthenticated() && 
                        request.auth.uid == request.resource.data.userId &&
                        hasRequiredFields(['name', 'price', 'storeId', 'userId', 'createdAt']) &&
                        request.resource.data.price >= 0 && // Price must be non-negative
-                       exists(/databases/$(database)/documents/stores/$(request.resource.data.storeId));
+                       exists(/databases/$(database)/documents/stores/$(request.resource.data.storeId)) &&
+                       get(/databases/$(database)/documents/stores/$(request.resource.data.storeId)).data.userId == request.auth.uid;
       
       // Store owners can update their products
       allow update: if isOwner(resource.data.userId) || isAdmin();
