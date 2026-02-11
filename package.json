@@ -6,14 +6,21 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:components": "jest --testPathPatterns=components",
+    "test:emulator": "firebase emulators:exec --only firestore,auth,storage 'npx jest --config jest.emulator.config.js'",
+    "test:all": "npm run test:components && npm run test:emulator",
+    "emulator": "firebase emulators:start"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",
     "date-fns": "^4.1.0",
     "firebase": "^12.6.0",
     "lucide-react": "^0.525.0",
-    "next": "15.3.5",
+    "next": "^16.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.5.2",
@@ -21,7 +28,13 @@
     "recharts": "^3.1.2"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "jest": "^30.0.0",
+    "jest-environment-jsdom": "^30.0.0",
     "tailwindcss": "^4"
   }
 }
