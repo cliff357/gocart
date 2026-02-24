@@ -7,7 +7,234 @@
 
 ---
 
-## 📋 工作總結 (2月5-11日)
+## 🚨 開發守則（新 AI / 新電腦必讀）
+
+> **任何新代碼，必須附帶對應的測試，否則不能 merge。**  
+> 以下是本項目的所有約定規則，新的 AI 或開發者在動手前務必完整閱讀。
+
+### 一、項目技術棧
+
+| 技術 | 版本 | 用途 |
+|------|------|------|
+| Next.js | 16.1.6 | 前端框架（App Router） |
+| React | 19.x | UI 組件 |
+| Redux Toolkit | 2.8.x | 狀態管理（4 slices：cart、product、address、rating） |
+| Firebase | 12.x | Auth、Firestore、Storage |
+| Tailwind CSS | 4.x | 樣式 |
+| Jest | 30.x | 單元 / 整合測試 |
+| @testing-library/react | — | 組件測試 |
+| Playwright | 1.58.x | E2E 端到端測試 |
+| @firebase/rules-unit-testing | 5.x | Firebase Security Rules 測試 |
+
+### 二、Git 分支策略
+
+```
+feature/* ──→ dev ──→ main
+```
+
+| 分支 | 用途 | 規則 |
+|------|------|------|
+| `main` | 正式版本 | 只從 dev merge，不直接 push |
+| `dev` | 開發整合 | 功能完成後 merge 到此 |
+| `feature/*` | 功能開發 | 從 dev 開出，完成後 PR merge 回 dev |
+| `add_cicd_test` | CI/CD（歷史） | 已 merge |
+
+**Commit 訊息格式**：`feat:` / `fix:` / `docs:` / `test:` / `refactor:`
+
+### 三、測試分層與規則
+
+本項目採用**測試金字塔**策略，分為 4 個優先級：
+
+```
+          ╱╲
+         ╱ P4 ╲     E2E 端到端 (Playwright)       — 16 tests
+        ╱──────╲
+       ╱  P3    ╲    API / Service 邏輯            — 35 tests
+      ╱──────────╲
+     ╱    P2      ╲   Redux Slice / State          — 27 tests
+    ╱──────────────╲
+   ╱      P1        ╲  UI 組件渲染 + 交互          — 71 tests
+  ╱──────────────────╲
+ ╱   P0 (Emulator)    ╲ Security Rules + CRUD      — 54 tests
+╱────────────────────────╲
+```
+
+### 四、寫新代碼時的測試要求
+
+#### 📦 新增 React 組件
+
+| 必須測試 | 範例 |
+|----------|------|
+| 組件可以渲染（不 crash） | `render(<MyComponent />)` |
+| 顯示正確的文字 / 內容 | `expect(screen.getByText('...')).toBeVisible()` |
+| 用戶互動（如有按鈕、輸入框） | `await userEvent.click(...)` |
+| Props 的預設值和自定義值 | 分別測 default 和自定義 |
+| 條件渲染（如有 if/ternary） | 分別測 true 和 false |
+
+**文件命名**：`__tests__/components/xxxx.test.jsx`  
+**必須使用 `renderWithProviders`**（來自 `test-utils.js`）如果組件用到 Redux  
+**Mock 規則**：
+- `next/navigation` → 用 `jest.mock('next/navigation', ...)`
+- `next/image` → 自動轉 `<img>` （已在 jest.config.js 設定）
+- `navigator.clipboard` → `Object.assign(navigator, { clipboard: { writeText: jest.fn() } })`
+- `react-hot-toast` → `jest.mock('react-hot-toast', ...)`
+
+#### 🔧 新增 / 修改 Redux Slice
+
+| 必須測試 | 範例 |
+|----------|------|
+| 初始狀態正確 | `reducer(undefined, { type: 'unknown' })` |
+| 每一個 action（reducer） | `reducer(state, actionCreator(payload))` |
+| Async Thunk 的 3 個狀態 | `pending` / `fulfilled` / `rejected` |
+| 邊界情況 | 空 payload、不存在的 item、重複操作 |
+
+**文件命名**：`__tests__/lib/xxxx.test.js`  
+**直接 import reducer 和 action**，不需要 render
+
+#### 🌐 新增 / 修改 API Service
+
+| 必須測試 | 範例 |
+|----------|------|
+| 成功返回正確格式 | `{ success: true, data: ... }` |
+| 錯誤返回正確格式 | `{ success: false, error: '...' }` |
+| 不存在的資源返回錯誤 | ID 不存在時 |
+| 未實現的方法返回提示 | `'Not implemented - connect to real API'` |
+
+**文件命名**：`__tests__/lib/xxxx.test.js`  
+**必須用 Fake Timers**（因為 ApiService 有 `simulateDelay`）：
+```javascript
+beforeEach(() => { jest.useFakeTimers(); });
+afterEach(() => { jest.useRealTimers(); });
+
+// 包裝 async call
+const runWithTimers = async (promise) => {
+    const result = promise;
+    await jest.runAllTimersAsync();
+    return result;
+};
+```
+
+#### 🔒 修改 Firestore Security Rules (`firestore.rules`)
+
+| 必須測試 | 範例 |
+|----------|------|
+| 允許的操作確實允許 | `assertSucceeds(...)` |
+| 拒絕的操作確實拒絕 | `assertFails(...)` |
+| Admin 權限 | 用 `role: 'admin'` 的 custom claims |
+| Owner 權限 | 驗證 `isOwner()` 商店擁有權 |
+| 數據驗證規則 | 如 rating 必須 1-5 |
+
+**文件命名**：`__tests__/emulator/xxxx.test.js`  
+**必須用 Emulator**：`npm run test:emulator`  
+**Project ID**：`demo-loyaultyclub`（`demo-` 開頭，不需要真實密鑰）
+
+#### 🖥️ 新增頁面 / 重大 UI 變更
+
+| 必須測試 | 範例 |
+|----------|------|
+| 頁面可訪問（HTTP 200） | `expect(response.status()).toBe(200)` |
+| 關鍵元素可見 | `await expect(page.getByText('...')).toBeVisible()` |
+| 導航正確 | `await expect(page).toHaveURL(...)` |
+| 響應式設計（如適用） | 測試 mobile (375px) 和 desktop (1280px) |
+
+**文件命名**：`e2e/xxxx.spec.js`  
+**框架**：Playwright + Chromium  
+**注意事項**：
+- 避免用不穩定的 text selector（如 regex 匹配到多個元素）
+- 優先用 `getByRole`、`getByText({ exact: true })`
+- Banner 已被註釋掉（`layout.jsx` 中 `{/* <Banner /> */}`），不要測它的頁面可見性
+- Navbar 的 About / Contact 連結目前指向 `/`，不是獨立頁面
+
+### 五、測試文件位置規則
+
+```
+新文件放哪裡？
+│
+├─ React 組件？     → __tests__/components/xxxx.test.jsx
+├─ Redux Slice？    → __tests__/lib/xxxx.test.js
+├─ API Service？    → __tests__/lib/xxxx.test.js
+├─ Security Rules？ → __tests__/emulator/xxxx.test.js
+├─ E2E 頁面流程？   → e2e/xxxx.spec.js
+└─ 測試工具/Mock？  → __tests__/utils/
+```
+
+### 六、測試工具（test-utils.js）
+
+`__tests__/utils/test-utils.js` 提供以下工具：
+
+| 工具 | 用途 |
+|------|------|
+| `renderWithProviders(ui, options)` | 渲染組件時自動包裹 Redux Provider |
+| `createTestStore(preloadedState)` | 創建測試用 Redux Store |
+| `mockProduct` | 標準商品 mock 數據 |
+| `mockUser` / `mockAdminUser` | 標準用戶 / 管理員 mock 數據 |
+| `mockOrder` | 標準訂單 mock 數據 |
+| `mockRating` | 標準評分 mock 數據 |
+| `mockCoupon` / `mockExpiredCoupon` | 優惠券 mock 數據 |
+| `mockAddress` | 地址 mock 數據 |
+| `mockReservation` | 預約 mock 數據 |
+| `waitForAsync()` | 等待 async 操作完成 |
+
+> ⚠️ **統一用這裡的 mock 數據，不要在每個測試自己隨意捏造。** 如果需要新的 mock 資料類型，加到這個文件。
+
+### 七、全局 Mock 設定（jest.setup.js）
+
+以下 mock 已在 `jest.setup.js` 中全局設定，不需要在每個測試重複：
+
+| Mock | 原因 |
+|------|------|
+| `fetch` | Firebase Auth 在 Node.js 需要 |
+| `TextEncoder` / `TextDecoder` | jsdom 缺少的 polyfill |
+| `window.matchMedia` | CSS media query |
+| `IntersectionObserver` | 懶加載 / 無限滾動 |
+| `ResizeObserver` | 組件尺寸偵測 |
+| `console.log/error/warn` 過濾 | 壓制 Firebase 噪音日誌 |
+
+### 八、運行測試命令速查
+
+```bash
+# 日常開發（最常用，0.6s）
+npm test                    # 運行所有 Jest 測試（133 tests）
+
+# 只跑組件測試
+npm run test:components     # 只跑 __tests__/components/（71 tests）
+
+# Redux + API Service 測試
+npx jest --testPathPatterns=lib   # 只跑 __tests__/lib/（62 tests）
+
+# Emulator 測試（需要 Java 21+）
+npm run test:emulator       # 啟動 Emulator → 跑測試 → 自動關閉（54 tests）
+
+# E2E 測試（需要 Chromium）
+npm run test:e2e            # 自動啟動 dev server → 跑 Playwright（16 tests）
+npm run test:e2e:ui         # Playwright UI 模式（方便 debug）
+
+# 全部一次跑
+npm run test:all            # Jest + Emulator
+```
+
+### 九、CI/CD 規則
+
+- GitHub Actions 在每次 push 自動運行（`.github/workflows/test.yml`）
+- CI 跑的測試：Jest 133 tests + Emulator 54 tests
+- E2E 目前只在本地跑（後續可加入 CI）
+- **所有測試通過才能 merge PR**
+
+### 十、已知的坑（踩過的雷）
+
+| 問題 | 解法 |
+|------|------|
+| `navigator.clipboard` undefined | 在測試開頭加 `Object.assign(navigator, { clipboard: { writeText: jest.fn() } })` |
+| Playwright strict mode 多元素匹配 | 用 `{ exact: true }` 或 `getByRole` 代替 `getByText` |
+| ApiService 測試跑 12 秒 | 用 `jest.useFakeTimers()` 跳過 `simulateDelay` |
+| Jest 嘗試跑 E2E 文件報錯 | `jest.config.js` 的 `testPathIgnorePatterns` 加入 `e2e/` |
+| Emulator 需要 Java | 安裝 OpenJDK 21：`brew install openjdk@21` 並加入 PATH |
+| `Banner` 被註釋掉 | 不要寫 E2E 測試去驗證 Banner 在頁面顯示 |
+| About / Contact 指向 `/` | 這些頁面路由不存在，Navbar 連結都指向首頁 |
+
+---
+
+## 📋 工作總結 (2月5日 — 2月24日)
 
 ### 🎯 為什麼要做這些改動？
 
@@ -491,13 +718,15 @@ Push 到 GitHub 後會自動：
 
 ### 🎯 後續可改進方向
 
-| 任務 | 說明 |
-|------|------|
-| CI/CD E2E 集成 | 在 GitHub Actions 加入 Playwright 測試 |
-| 覆蓋率報告 | 啟用 Jest coverage threshold |
-| 更多 E2E 場景 | 登入流程、下單流程等 |
-| 視覺回歸測試 | Playwright screenshot comparison |
-| 性能測試 | Lighthouse CI |
+| 優先 | 任務 | 說明 |
+|------|------|------|
+| 🔴 高 | 真實 API 替換 MockData | ApiService 目前用 MockData，接真實 Firebase 後要更新測試 |
+| 🔴 高 | About / Contact 頁面 | 目前路由不存在，建好後要加 E2E 測試 |
+| 🟡 中 | CI/CD E2E 集成 | 在 GitHub Actions 加入 Playwright 測試 |
+| 🟡 中 | 覆蓋率報告 | 啟用 Jest coverage threshold（目標 60%+） |
+| 🟢 低 | 登入 / 下單 E2E 流程 | 模擬完整用戶購物旅程 |
+| 🟢 低 | 視覺回歸測試 | Playwright screenshot comparison |
+| 🟢 低 | 性能測試 | Lighthouse CI |
 
 ---
 
