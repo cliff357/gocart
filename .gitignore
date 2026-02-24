@@ -56,3 +56,7 @@ functions/lib/
 next-env.d.ts
 
 /app/generated/prisma
+
+# Playwright
+test-results/
+playwright-report/

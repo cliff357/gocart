@@ -32,6 +32,7 @@ const customJestConfig = {
         '<rootDir>/functions/',
         '<rootDir>/__tests__/utils/',
         '<rootDir>/__tests__/emulator/',  // Emulator 測試用 jest.emulator.config.js
+        '<rootDir>/e2e/',                 // E2E 測試用 Playwright
     ],
     
     // 測試超時設置（Emulator 測試可能需要更長時間）

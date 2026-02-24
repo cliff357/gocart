@@ -1,7 +1,7 @@
 # 🧪 LoyaultyClub 測試文檔
 
 > 📅 創建日期：2026年2月5日  
-> 📅 最後更新：2026年2月11日  
+> 📅 最後更新：2026年2月24日  
 > 👤 負責人：SA Team  
 > 📦 項目：LoyaultyClub (老友賣蘿柚企劃)
 
@@ -44,6 +44,11 @@
 | 2/11 | 重寫測試配合新 firestore.rules | ✅ |
 | 2/11 | 修復 firestore.rules 安全漏洞 | ✅ |
 | 2/11 | 所有測試通過 (79 tests) | ✅ |
+| 2/24 | P1: 新增 UI 組件測試 — Navbar, Footer, Banner, Hero 等 (46 tests) | ✅ |
+| 2/24 | P2: 新增 Redux Slice 測試 — cart, product, address, rating (27 tests) | ✅ |
+| 2/24 | P3: 新增 API Service 測試 — 9 個 Service 類別 (35 tests) | ✅ |
+| 2/24 | P4: 安裝 Playwright + 新增 E2E 測試 (16 tests) | ✅ |
+| 2/24 | 所有測試通過 (133 Jest + 16 E2E = **149 tests**) | ✅ |
 
 ---
 
@@ -52,15 +57,34 @@
 ```
 __tests__/
 ├── components/
-│   └── ui-components.test.jsx    # 25 個組件測試
+│   ├── ui-components.test.jsx       # P0: 25 個基礎組件測試
+│   └── ui-components-p1.test.jsx    # P1: 46 個進階組件測試
 ├── emulator/
-│   ├── firestore-rules.test.js   # 36 個權限測試
-│   └── firestore-crud.test.js    # 18 個 CRUD 測試
+│   ├── firestore-rules.test.js      # 36 個權限測試
+│   └── firestore-crud.test.js       # 18 個 CRUD 測試
+├── lib/
+│   ├── redux-slices.test.js         # P2: 27 個 Redux Slice 測試
+│   └── api-services.test.js         # P3: 35 個 API Service 測試
 └── utils/
-    └── test-utils.js             # 測試工具
+    └── test-utils.js                # 測試工具
+
+e2e/
+└── app.spec.js                      # P4: 16 個 E2E 測試 (Playwright)
 ```
 
-**總計：79 個測試全部通過 ✅**
+### 📊 測試統計
+
+| 類型 | 框架 | 數量 | 運行時間 |
+|------|------|------|----------|
+| UI 組件 (P0+P1) | Jest + Testing Library | 71 | ~0.3s |
+| Redux Slice (P2) | Jest | 27 | ~0.1s |
+| API Service (P3) | Jest + Fake Timers | 35 | ~0.2s |
+| Security Rules | Jest + Firebase Emulator | 36 | ~2s |
+| CRUD 操作 | Jest + Firebase Emulator | 18 | ~1s |
+| E2E (P4) | Playwright + Chromium | 16 | ~6s |
+| **總計** | | **203** | |
+
+> 💡 Jest 測試（133 個）在 0.6 秒內完成！
 
 ---
 
@@ -241,16 +265,179 @@ __tests__/
 
 ---
 
+### 4. P1 進階 UI 組件測試 (ui-components-p1.test.jsx)
+
+測試更多核心 UI 組件，覆蓋 Navbar、Footer、Banner、Hero 等主要區塊。
+
+#### Navbar (7 tests)
+- 渲染 Logo、首頁連結、Shop 連結
+- 搜尋輸入框功能
+- Login 按鈕、導航分隔線
+
+#### Footer (8 tests)
+- 版權資訊、PRODUCTS/CONTACT 區塊
+- 社交媒體連結、產品分類連結
+- 聯絡資訊、Privacy Policy 連結
+
+#### Banner (5 tests)
+- 促銷文字、Claim Offer 按鈕
+- 關閉按鈕隱藏 Banner
+- Claim Offer 觸發 toast
+
+#### Hero (8 tests)
+- 主標題、起始價格
+- LEARN MORE 按鈕、NEWS 標籤
+- Best products / 20% discounts 區塊
+- View more 連結、hero 圖片
+
+#### PageTitle (5 tests)
+- 標題、說明文字、連結文字
+- 預設/自定義 path
+
+#### Newsletter (4 tests)
+- Join Newsletter 標題
+- email 輸入框功能
+- Get Updates 按鈕
+
+#### OurSpecs (5 tests)
+- Our Specifications 標題
+- Free Shipping / 7 Days Return / 24/7 Support
+- 3 個 spec 項目渲染
+
+#### CategoriesMarquee (4 tests)
+- 分類名稱顯示
+- 多個分類、按鈕元素
+- 重複的分類（marquee 效果）
+
+---
+
+### 5. P2 Redux Slice 測試 (redux-slices.test.js)
+
+測試所有 4 個 Redux Slice 的 reducer 邏輯。
+
+#### cartSlice (9 tests)
+- 初始狀態（空購物車 total=0）
+- `addToCart`：添加新商品、已存在商品數量 +1、多種商品
+- `removeFromCart`：減少數量、數量為 0 時移除
+- `deleteItemFromCart`：完全移除、刪除不存在的商品不影響 total
+- `clearCart`：清空購物車
+
+#### productSlice (11 tests)
+- 初始狀態（空列表 loading=false）
+- `setProduct` / `clearProduct`：設置/清空商品列表
+- `setCurrentProduct` / `clearCurrentProduct`：設置/清除當前商品
+- `setSearchResults` / `clearSearchResults`：設置/清除搜尋結果
+- `clearError`：清除錯誤
+- `fetchProducts` async thunk：pending/fulfilled/rejected 三種狀態
+
+#### addressSlice (3 tests)
+- 初始狀態（有 addressDummyData）
+- `addAddress`：添加新地址、添加多個地址
+
+#### ratingSlice (4 tests)
+- 初始狀態（空陣列）
+- `addRating`：添加評分、多個評分、保留完整資料
+
+---
+
+### 6. P3 API Service 測試 (api-services.test.js)
+
+測試所有 9 個 ApiService 類別。使用 `jest.useFakeTimers()` 跳過 `simulateDelay`，將測試時間從 12.8s 優化至 0.19s。
+
+#### ApiService 中央入口 (1 test)
+- 包含所有 9 個服務
+
+#### ProductApiService (7 tests)
+- getAllProducts / getProduct / getProductsByCategory
+- searchProducts / getCategories
+- createProduct（未實現方法返回錯誤）
+
+#### UserApiService (5 tests)
+- getAllUsers / getUser / getCurrentUser
+- 不存在的用戶返回錯誤
+- login（未實現）
+
+#### StoreApiService (4 tests)
+- getAllStores / getStore / getStoreByUsername
+- 不存在的商店返回錯誤
+
+#### RatingApiService (3 tests)
+- getAllRatings / getRating / getRatingsByProduct
+
+#### OrderApiService (4 tests)
+- getAllOrders / getOrder
+- 不存在的訂單返回錯誤
+- createOrder（未實現）
+
+#### AddressApiService (3 tests)
+- getAddressesByUser
+- 不存在的地址返回錯誤
+- createAddress（未實現）
+
+#### CouponApiService (4 tests)
+- getAllCoupons / getPublicCoupons
+- 不存在的優惠券返回錯誤
+- validateCoupon 驗證失敗
+
+#### DashboardApiService (2 tests)
+- getAdminDashboard / getStoreDashboard
+
+#### MiscApiService (2 tests)
+- getOurSpecs
+- uploadImage（未實現）
+
+---
+
+### 7. P4 E2E 測試 (e2e/app.spec.js)
+
+使用 Playwright + Chromium 進行端到端測試，自動啟動 Next.js dev server。
+
+#### 首頁 (6 tests)
+- 正確載入首頁（title 檢查）
+- Hero 區塊顯示
+- Navbar 導航連結
+- Our Specifications 區塊
+- Newsletter 區塊
+- Footer 顯示
+
+#### 導航 (2 tests)
+- 點擊 Shop 導航到商店頁面
+- 點擊 Logo 回到首頁
+
+#### 商店頁面 (2 tests)
+- 顯示商品列表
+- 搜尋功能過濾商品
+
+#### 購物車頁面 (2 tests)
+- 顯示購物車即將推出
+- 瀏覽產品連結導航至 /shop
+
+#### 頁面載入 (2 tests)
+- 首頁有正確的 viewport meta tag
+- 商店頁面可直接訪問（HTTP 200）
+
+#### 響應式設計 (2 tests)
+- 桌面版本（1280px）顯示完整導航
+- 手機版本（375px）顯示 Login 按鈕
+
+---
+
 ## 🚀 如何運行測試
 
 ### 本地運行
 
 ```bash
-# 運行組件測試（快，0.4 秒）
+# 運行所有 Jest 測試（組件 + Redux + API Service，133 tests，~0.6s）
 npm run test:components
 
-# 運行 Emulator 測試（2 秒）
+# 運行 Emulator 測試（54 tests，~2.5s）
 npm run test:emulator
+
+# 運行 E2E 測試（16 tests，~6s，自動啟動 dev server）
+npm run test:e2e
+
+# 運行 E2E 測試（帶 UI 模式）
+npm run test:e2e:ui
 
 # 運行所有測試
 npm run test:all
@@ -259,10 +446,12 @@ npm run test:all
 ### CI/CD 自動運行
 
 Push 到 GitHub 後會自動：
-1. 運行 25 個組件測試
+1. 運行 133 個 Jest 測試（組件 + Redux + API）
 2. 啟動 Firebase Emulator
-3. 運行 49 個 Emulator 測試
+3. 運行 54 個 Emulator 測試
 4. 回報結果
+
+> 💡 E2E 測試目前只在本地運行，CI/CD 集成可在後續加入
 
 ---
 
@@ -270,9 +459,10 @@ Push 到 GitHub 後會自動：
 
 | 文件 | 用途 |
 |------|------|
-| `jest.config.js` | 組件測試配置 |
+| `jest.config.js` | Jest 主配置（排除 emulator/ 和 e2e/） |
 | `jest.emulator.config.js` | Emulator 測試配置 |
 | `jest.emulator.setup.js` | Emulator 測試初始化 |
+| `playwright.config.js` | Playwright E2E 測試配置 |
 | `firebase.json` | Emulator 端口配置 |
 | `.github/workflows/test.yml` | GitHub Actions CI/CD |
 
@@ -289,15 +479,25 @@ Push 到 GitHub 後會自動：
 
 ---
 
-## 📈 下一步計劃
+## 📈 測試計劃進度
 
 | 優先級 | 任務 | 狀態 |
 |--------|------|------|
-| P0 | CI/CD 測試通過 → Merge PR | ✅ |
-| P1 | 更多 UI 組件測試 (Navbar, Footer 等) | ⏳ |
-| P2 | Redux Slice 測試 (cart, product 等) | ⏳ |
-| P3 | API Route 測試 | ⏳ |
-| P4 | E2E 測試 (Cypress/Playwright) | ⏳ |
+| P0 | CI/CD 測試通過 → Merge PR | ✅ 完成 |
+| P1 | UI 組件測試 (Navbar, Footer, Banner, Hero 等 46 tests) | ✅ 完成 |
+| P2 | Redux Slice 測試 (cart, product, address, rating 27 tests) | ✅ 完成 |
+| P3 | API Service 測試 (9 個 Service 類別 35 tests) | ✅ 完成 |
+| P4 | E2E 測試 (Playwright + Chromium 16 tests) | ✅ 完成 |
+
+### 🎯 後續可改進方向
+
+| 任務 | 說明 |
+|------|------|
+| CI/CD E2E 集成 | 在 GitHub Actions 加入 Playwright 測試 |
+| 覆蓋率報告 | 啟用 Jest coverage threshold |
+| 更多 E2E 場景 | 登入流程、下單流程等 |
+| 視覺回歸測試 | Playwright screenshot comparison |
+| 性能測試 | Lighthouse CI |
 
 ---
 
@@ -313,4 +513,14 @@ A: 54 個測試只需 ~2.5 秒，非常快。
 A: 不需要！Emulator 使用 `demo-` 開頭的 Project ID，完全離線運行。
 
 ### Q: 如何新增測試？
-A: 在 `__tests__/emulator/` 新增測試文件，參考現有格式。
+A: 
+- **組件測試**：在 `__tests__/components/` 新增 `.test.jsx` 文件
+- **Redux 測試**：在 `__tests__/lib/` 新增 `.test.js` 文件
+- **Emulator 測試**：在 `__tests__/emulator/` 新增（使用 `jest.emulator.config.js`）
+- **E2E 測試**：在 `e2e/` 新增 `.spec.js` 文件
+
+### Q: API Service 測試為什麼用 Fake Timers？
+A: ApiService 使用 `simulateDelay` 模擬網路延遲。使用 `jest.useFakeTimers()` 可以跳過等待，將 35 個測試從 12.8 秒降至 0.19 秒。
+
+### Q: E2E 測試需要什麼環境？
+A: 需要安裝 Playwright 和 Chromium (`npx playwright install chromium`)。測試會自動啟動 Next.js dev server。
