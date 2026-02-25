@@ -12,24 +12,31 @@ const customJestConfig = {
     
     // 設置路徑別名 (與 jsconfig.json 一致)
     moduleNameMapper: {
-        // General path alias
-        '^@/(.*)$': '<rootDir>/$1',
         // Mock next/server for API routes
         '^next/server$': '<rootDir>/__mocks__/next-server.js',
+        // General path alias (catch-all)
+        '^@/(.*)$': '<rootDir>/$1',
     },
     
-    // 測試文件匹配模式
+    // 測試文件匹配模式 - 只匹配 .test.js 或 .spec.js 文件
     testMatch: [
-        '**/__tests__/**/*.[jt]s?(x)',
+        '**/__tests__/**/*.test.[jt]s?(x)',
+        '**/__tests__/**/*.spec.[jt]s?(x)',
         '**/?(*.)+(spec|test).[jt]s?(x)'
     ],
     
-    // 忽略的路徑
+    // 忽略的路徑 - Emulator 測試用專門的 config
     testPathIgnorePatterns: [
         '<rootDir>/node_modules/',
         '<rootDir>/.next/',
         '<rootDir>/functions/',
+        '<rootDir>/__tests__/utils/',
+        '<rootDir>/__tests__/emulator/',  // Emulator 測試用 jest.emulator.config.js
+        '<rootDir>/e2e/',                 // E2E 測試用 Playwright
     ],
+    
+    // 測試超時設置（Emulator 測試可能需要更長時間）
+    testTimeout: 10000,
     
     // 收集覆蓋率的文件
     collectCoverageFrom: [

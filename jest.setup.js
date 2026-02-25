@@ -1,12 +1,12 @@
 // Jest 測試環境設置
 import '@testing-library/jest-dom'
 
-// Polyfill for Next.js API Routes
+// Polyfill for Next.js API Routes & TextEncoder/TextDecoder
 import { TextEncoder, TextDecoder } from 'util'
 global.TextEncoder = TextEncoder
 global.TextDecoder = TextDecoder
 
-// Mock Request class with proper json method
+// Mock Request class with proper json method (for API route testing)
 global.Request = class Request {
     constructor(url, options = {}) {
         this.url = url
@@ -25,7 +25,7 @@ global.Request = class Request {
     }
 }
 
-// Mock Response class with static json method
+// Mock Response class with static json method (for NextResponse.json())
 global.Response = class Response {
     constructor(body, options = {}) {
         this._body = body
@@ -75,6 +75,16 @@ global.Headers = class Headers {
     forEach(callback) { this._headers.forEach(callback) }
 }
 
+// Polyfill for fetch (required by Firebase Auth in Node.js environment)
+global.fetch = jest.fn(() =>
+    Promise.resolve({
+        json: () => Promise.resolve({}),
+        text: () => Promise.resolve(''),
+        ok: true,
+        status: 200,
+    })
+)
+
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
     useRouter: () => ({
@@ -95,21 +105,82 @@ jest.mock('@/lib/firebase/config', () => ({
     isFirebaseInitialized: () => false,
 }))
 
-// 清理 console 錯誤 (可選)
-const originalError = console.error
+// Mock console methods to reduce noise in tests
+const originalConsoleLog = console.log
+const originalConsoleError = console.error
+const originalConsoleWarn = console.warn
+
+// Suppress Firebase/Firestore logging during tests
 beforeAll(() => {
-    console.error = (...args) => {
-        if (
-            typeof args[0] === 'string' &&
-            (args[0].includes('Warning: ReactDOM.render is no longer supported') ||
-             args[0].includes('RESEND_API_KEY not configured'))
-        ) {
-            return
+    console.log = (...args) => {
+        const message = args[0]?.toString() || ''
+        if (!message.includes('🔥') && !message.includes('Firestore') && !message.includes('Firebase')) {
+            originalConsoleLog(...args)
         }
-        originalError.call(console, ...args)
+    }
+    console.error = (...args) => {
+        const message = args[0]?.toString() || ''
+        if (
+            !message.includes('Firebase') && 
+            !message.includes('FirebaseError') &&
+            !message.includes('FirestoreService') &&
+            !message.includes('❌') && 
+            !message.includes('💡') &&
+            !message.includes('Warning: ReactDOM.render is no longer supported') &&
+            !message.includes('RESEND_API_KEY not configured') &&
+            !message.includes('Failed to load category') &&
+            !message.includes('Failed to load categories') &&
+            !message.includes('Error getting all categories')
+        ) {
+            originalConsoleError(...args)
+        }
+    }
+    console.warn = (...args) => {
+        const message = args[0]?.toString() || ''
+        if (!message.includes('Firebase') && !message.includes('⚠️')) {
+            originalConsoleWarn(...args)
+        }
     }
 })
 
 afterAll(() => {
-    console.error = originalError
+    console.log = originalConsoleLog
+    console.error = originalConsoleError
+    console.warn = originalConsoleWarn
 })
+
+// Mock window.matchMedia
+Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: jest.fn().mockImplementation(query => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: jest.fn(),
+        removeListener: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+        dispatchEvent: jest.fn(),
+    })),
+})
+
+// Mock IntersectionObserver
+class MockIntersectionObserver {
+    constructor(callback) {
+        this.callback = callback
+    }
+    observe() { return null }
+    unobserve() { return null }
+    disconnect() { return null }
+}
+
+global.IntersectionObserver = MockIntersectionObserver
+
+// Mock ResizeObserver
+class MockResizeObserver {
+    observe() { return null }
+    unobserve() { return null }
+    disconnect() { return null }
+}
+
+global.ResizeObserver = MockResizeObserver
