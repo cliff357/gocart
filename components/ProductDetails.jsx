@@ -6,21 +6,12 @@ import Image from "next/image";
 import Link from "next/link";
 import ReservationModal from "./ReservationModal";
 import { productService } from "@/lib/services/FirestoreService";
-// Temporarily disabled cart functionality
-// import { addToCart } from "@/lib/features/cart/cartSlice";
-// import { useRouter } from "next/navigation";
-// import Counter from "./Counter";
-// import { useDispatch, useSelector } from "react-redux";
+
 
 const ProductDetails = ({ product }) => {
 
     const productId = product.id;
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$';
-
-    // Temporarily disabled cart functionality
-    // const cart = useSelector(state => state.cart.cartItems);
-    // const dispatch = useDispatch();
-    // const router = useRouter()
 
     const [mainImage, setMainImage] = useState(product.images[0]);
     const [showReservation, setShowReservation] = useState(false);

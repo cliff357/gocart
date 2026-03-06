@@ -7,19 +7,13 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import cartReducer from '@/lib/features/cart/cartSlice';
 import productReducer from '@/lib/features/product/productSlice';
-import addressReducer from '@/lib/features/address/addressSlice';
-import ratingReducer from '@/lib/features/rating/ratingSlice';
 
 // 創建測試用的 Redux store
 export const createTestStore = (preloadedState = {}) => {
     return configureStore({
         reducer: {
-            cart: cartReducer,
             product: productReducer,
-            address: addressReducer,
-            rating: ratingReducer,
         },
         preloadedState,
     });
@@ -98,16 +92,6 @@ export const mockOrder = {
     ],
     totalAmount: 200,
     status: 'pending',
-    createdAt: '2026-01-01T00:00:00Z',
-};
-
-// Mock rating data
-export const mockRating = {
-    id: 'rating-1',
-    productId: 'prod-1',
-    userId: 'user-1',
-    rating: 5,
-    review: 'Great product!',
     createdAt: '2026-01-01T00:00:00Z',
 };
 

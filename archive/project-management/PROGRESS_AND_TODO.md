@@ -1,5 +1,7 @@
 # GoCart 開發進度與待辦事項
 
+> ⚠️ **歷史文檔**：此文件最後更新於 2026年1月20日。後續工作進度請參考 [TESTING.md](./TESTING.md) 的工作總結和測試計劃進度表。
+>
 > 最後更新：2026年1月20日
 > 目的：追蹤 Code Review 修復進度和待辦事項
 
@@ -11,7 +13,8 @@
 |------|------|--------|--------|
 | 測試基礎設施 | ✅ | | |
 | CI/CD | ✅ | | |
-| API 安全性 | | 🔄 | |
+| API 安全性 | ✅ | | |
+| 測試 Merge 修復 | ✅ | | |
 | 其他 Review 問題 | | | ⏳ |
 
 ---
@@ -47,29 +50,27 @@
 
 ## 🔄 進行中
 
-### 1. 測試 Mock 調試
+### 1. 測試 Mock 調試 — ✅ 已解決 (2/26)
 **問題**: `__resetMockAuthResult is not a function`
 
-**可能原因**:
-1. Jest moduleNameMapper 優先順序問題
-2. next/jest 覆蓋自定義配置
-3. ESM/CommonJS 混合問題
+**解決方案**：
+在 `admin.test.js` 中直接使用 `jest.mock('@/lib/auth/server')` 代替 `__mocks__/` 目錄。
+移除了 `jest.resetModules()` 以避免 mock closure 失效，改用 `beforeAll` 匯入 route module。
 
-**下一步**:
-1. 檢查 `jest.config.js` 中 moduleNameMapper 順序
-2. 嘗試用 `jest.mock()` 手動 mock
-3. 或者改用 `jest.doMock()` 在 `beforeEach` 中
+### 2. Merge 後測試修復 — ✅ 已完成 (2/26)
+**問題**: Merge dev → add_test_module 後 53 個測試失敗
 
-**相關檔案**:
-- `__mocks__/lib/auth/server.js`
-- `__tests__/api/admin.test.js`
-- `jest.config.js`
+**根因**：
+1. P1 組件測試（19 fail）— 組件在 add_test_module 分支上已重寫（Hero 改為 Firestore banner、Footer 改了區塊名、CategoriesMarquee 用中文）
+2. API Service 測試（25 fail）— ApiService 已改用真實 FirestoreService，不再用 MockData；StoreApiService 已移除
+3. Admin API 測試（9 fail）— `jest.resetModules()` 破壞 mock closure
 
-### 2. 前端認證整合
-**需要做**:
-- 在 admin 頁面調用 API 時添加 Authorization header
-- 從 Firebase Auth 獲取 ID token
-- 處理 401/403 錯誤
+**修復方法**：
+- P1：更新所有測試斷言配合新組件內容
+- P3：加入 `jest.mock('@/lib/services/FirestoreService')` mock 數據；移除 StoreApiService 和 getStoreDashboard 測試
+- Admin：移除 `jest.resetModules()`，改用 `beforeAll` 匯入
+
+**結果**：137 Jest 測試全部通過
 
 ---
 
@@ -213,21 +214,17 @@ npm run test:watch
 
 ## 📝 下次繼續的步驟
 
-1. **修復 Mock 問題**
-   - 打開 `__tests__/api/admin.test.js`
-   - 嘗試用 `jest.mock('@/lib/auth/server', () => require('../../__mocks__/lib/auth/server'))` 
-   - 運行 `npm test` 確認
+1. **前端認證整合**
+   - 在 admin 頁面調用 API 時添加 Authorization header
+   - 從 Firebase Auth 獲取 ID token
+   - 處理 401/403 錯誤
 
-2. **驗證認證功能**
-   - 確保所有 12 個測試通過
-   - 特別是 6 個安全性測試
-
-3. **前端整合**
-   - 更新 admin 頁面的 API 調用
-   - 添加 Authorization header
-
-4. **繼續其他 Review 問題**
+2. **繼續其他 Review 問題**
    - 按優先級處理 CODE_REVIEW_REPORT.md 中的問題
+
+3. **E2E 測試更新**
+   - About / Contact 頁面建好後加 E2E 測試
+   - 考慮將 Playwright 加入 CI/CD
 
 ---
 

@@ -1,8 +1,8 @@
 # LoyaultyClub 網站功能清單
 
-> 📅 最後更新：2026年2月2日
+> 📅 最後更新：2026年2月27日
 > 📦 項目名稱：LoyaultyClub (老友賣蘿柚企劃)
-> 🛠️ 技術棧：Next.js 15.3.8 + Firebase + Tailwind CSS
+> 🛠️ 技術棧：Next.js 16.1.6 + Firebase + Tailwind CSS 4
 
 ---
 
@@ -214,7 +214,6 @@
 | `categoryService` | 分類 CRUD + 樹狀結構 + 父子關係 |
 | `userService` | 用戶 CRUD + 管理員查詢 |
 | `orderService` | 訂單 CRUD |
-| `ratingService` | 評分 CRUD + 產品評分豐富化 |
 | `couponService` | 優惠券 CRUD + 驗證 |
 | `addressService` | 地址 CRUD |
 
@@ -263,22 +262,11 @@ API 層包裝，為未來 REST API 做準備
 | `ProductDescription` | 產品描述 + Reviews 標籤頁 |
 | `ReservationModal` | 預訂表單彈窗 |
 | `LatestProducts` | 最新產品區塊 |
-| `BestSelling` | 熱賣產品區塊 |
 | `AboutSection` | 關於我們區塊 (支持影片) |
-| `CategoriesMarquee` | 關鍵字跑馬燈 |
-| `OurSpec` | 服務特色區塊 |
-| `Newsletter` | 訂閱區塊 |
 | `Logo` | 品牌 Logo (SVG) |
-| `Rating` | 評分星星 |
-| `Counter` | 數量選擇器 |
 | `Title` | 區塊標題 |
-| `Banner` | 通用橫幅 |
 | `Loading` | 載入動畫 |
-| `PageTitle` | 頁面標題 |
-| `RatingModal` | 評分彈窗 (未完成) |
-| `AddressModal` | 地址表單彈窗 (未完成) |
-| `OrderItem` | 訂單項目 (未使用) |
-| `OrderSummary` | 訂單摘要 (未使用) |
+
 
 ### 管理員組件
 | 組件 | 功能 |
@@ -391,14 +379,6 @@ API 層包裝，為未來 REST API 做準備
 }
 ```
 
-### 4. `rating` Slice
-```js
-{
-  ratings: {},
-  averages: {}
-}
-```
-
 ---
 
 ## 🔥 Firebase 服務
@@ -419,7 +399,6 @@ API 層包裝，為未來 REST API 做準備
 | `adminInvites` | 管理員邀請 | email, status, invitedBy |
 | `coupons` | 優惠券 | code, discount, expiryDate |
 | `orders` | 訂單 | (未使用) |
-| `ratings` | 評分 | (未使用) |
 | `addresses` | 地址 | (未使用) |
 | `settings.home` | 首頁設定 | banners, positions, aboutMedia |
 | `settings.about` | 關於頁設定 | timeline[] |
@@ -479,11 +458,10 @@ API 層包裝，為未來 REST API 做準備
 1. **購物車系統** - 已有 Redux slice，但功能停用
 2. **訂單系統** - 需要完整的下單流程
 3. **付款整合** - PayMe / FPS
-4. **評分系統** - 已有 slice + Modal，未接入後端
-5. **地址管理** - 已有 slice + Modal，未接入後端
-6. **Newsletter** - UI 已有，後端未實現
-7. **Reviews 標籤頁** - 產品詳情頁 Reviews tab 顯示 "Coming soon"
-8. **搜索功能** - 手機版無搜索欄
+4. **地址管理** - 已有 slice + Modal，未接入後端
+5. **Newsletter** - UI 已有，後端未實現
+6. **Reviews 標籤頁** - 產品詳情頁 Reviews tab 顯示 "Coming soon"
+7. **搜索功能** - 手機版無搜索欄
 
 ---
 
@@ -491,15 +469,18 @@ API 層包裝，為未來 REST API 做準備
 
 ### Jest + Testing Library
 - 組件測試: `__tests__/components/`
-- 整合測試: `__tests__/integration/`
-- API 測試: `__tests__/api/`
-- Service 測試: `__tests__/lib/`
+- Redux / API 測試: `__tests__/lib/`
+- Admin API 測試: `__tests__/api/`
+- Emulator 測試: `__tests__/emulator/`
+
+### Playwright E2E
+- E2E 測試: `e2e/`
 
 ### 執行測試
 ```bash
-npm test          # 運行所有測試
-npm run test:watch # 監視模式
-npm run test:coverage # 覆蓋率報告
+npm test              # Jest 單元/整合測試（176 tests）
+npm run test:e2e      # Playwright E2E（52 tests）
+npm run test:emulator # Firebase Emulator（72 tests）
 ```
 
 ---
@@ -545,8 +526,7 @@ gocart/
 │   ├── features/          # Redux Slices
 │   │   ├── cart/
 │   │   ├── product/
-│   │   ├── address/
-│   │   └── rating/
+│   │   └── address/
 │   ├── firebase/          # Firebase 服務
 │   │   ├── config.js      # 初始化
 │   │   ├── firestore.js   # Firestore 操作

@@ -1,6 +1,5 @@
 'use client'
 import { useEffect } from "react";
-import Banner from "@/components/Banner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ColorSwitcher from "@/components/ColorSwitcher";
@@ -33,8 +32,6 @@ export default function PublicLayout({ children }) {
 
     return (
         <>
-            {/* Banner temporarily hidden */}
-            {/* <Banner /> */}
             <Navbar />
             {children}
             <Footer />

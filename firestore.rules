@@ -59,8 +59,8 @@ service cloud.firestore {
     // Reservations Collection - 訪客可創建預訂
     // ============================================
     match /reservations/{reservationId} {
-      // 任何人都可以讀取（用於確認頁面等）
-      allow read: if true;
+      // 只有 Admin 可以讀取預訂列表
+      allow read: if isAdmin();
       
       // 任何人都可以創建預訂（訪客預訂功能）
       allow create: if true;
@@ -76,13 +76,65 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
-    
+
     // ============================================
-    // 其他所有集合：所有人可讀，只有 Admin 可寫
+    // Products Collection - 公開讀取
     // ============================================
-    match /{document=**} {
+    match /products/{productId} {
       allow read: if true;
       allow write: if isAdmin();
+    }
+
+    // ============================================
+    // Categories Collection - 公開讀取
+    // ============================================
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ============================================
+    // Ratings Collection - 公開讀取
+    // ============================================
+    match /ratings/{ratingId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ============================================
+    // Orders Collection - 只有 Admin 可讀寫
+    // ============================================
+    match /orders/{orderId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ============================================
+    // Addresses Collection - 需要登入才可讀
+    // ============================================
+    match /addresses/{addressId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ============================================
+    // Coupons Collection - 只有 Admin 可讀寫
+    // ============================================
+    match /coupons/{couponId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ============================================
+    // Stores Collection - 只有 Admin 可讀寫
+    // ============================================
+    match /stores/{storeId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // ============================================
+    // 默認規則：拒絕所有未明確定義的集合
+    // ============================================
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

@@ -1,12 +1,11 @@
 'use client'
-import { Search, Menu, X } from "lucide-react"; // ShoppingCart temporarily disabled
+import { Search, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import Logo from "./Logo"; // Import our new logo
+import Logo from "./Logo";
 import { categories as staticCategories } from "../assets/assets";
 import { categoryService } from '@/lib/services/FirestoreService'
-// import { useSelector } from "react-redux"; // Temporarily disabled
 
 const Navbar = () => {
 
@@ -15,7 +14,6 @@ const Navbar = () => {
     const [search, setSearch] = useState('')
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const [isMobile, setIsMobile] = useState(false)
-    // const cartCount = useSelector(state => state.cart.total) // Temporarily disabled
 
     // Check if device is mobile
     useEffect(() => {
@@ -65,13 +63,6 @@ const Navbar = () => {
                                 <Search size={18} style={{ color: 'var(--color-text)' }} />
                                 <input className="w-full bg-transparent outline-none" style={{ color: 'var(--color-text)' }} type="text" placeholder="Search products" value={search} onChange={(e) => setSearch(e.target.value)} required />
                             </form>
-
-                            {/* Cart temporarily hidden */}
-                            {/* <Link href="/cart" className="relative flex items-center gap-2 text-slate-600">
-                                <ShoppingCart size={18} />
-                                Cart
-                                <button className="absolute -top-1 left-3 text-[8px] text-white bg-slate-600 size-3.5 rounded-full">{cartCount}</button>
-                            </Link> */}
                         </div>
                     )}
 

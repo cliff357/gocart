@@ -193,7 +193,7 @@ const runWithTimers = async (promise) => {
 
 ```bash
 # 日常開發（最常用，~0.9s）
-npm test                    # 運行所有 Jest 測試（132 tests）
+npm test                    # 運行所愉 Jest 測試（132 tests）
 
 # 只跑組件測試
 npm run test:components     # 只跑 __tests__/components/（105 tests）

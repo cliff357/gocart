@@ -114,7 +114,13 @@ const originalConsoleWarn = console.warn
 beforeAll(() => {
     console.log = (...args) => {
         const message = args[0]?.toString() || ''
-        if (!message.includes('🔥') && !message.includes('Firestore') && !message.includes('Firebase')) {
+        if (
+            !message.includes('🔥') && 
+            !message.includes('Firestore') && 
+            !message.includes('Firebase') &&
+            !message.includes('📡') &&           // API Service debug logs
+            !message.includes('✅')              // Success logs (email sent, etc.)
+        ) {
             originalConsoleLog(...args)
         }
     }
@@ -130,7 +136,11 @@ beforeAll(() => {
             !message.includes('RESEND_API_KEY not configured') &&
             !message.includes('Failed to load category') &&
             !message.includes('Failed to load categories') &&
-            !message.includes('Error getting all categories')
+            !message.includes('Error getting all categories') &&
+            !message.includes('not wrapped in act(') &&   // React async state update warnings
+            !message.includes('Resend API error') &&      // Admin invite test expected errors
+            !message.includes('Reservation error') &&     // ReservationModal error handling tests
+            !message.includes('Failed to load notification')  // Notification API fallback tests
         ) {
             originalConsoleError(...args)
         }

@@ -53,13 +53,11 @@ service firebase.storage {
       // Everyone can read product images
       allow read: if true;
       
-      // Store owners can upload product images
-      allow write: if isAuthenticated() && 
-                      isValidSize() && 
-                      isImage();
+      // Only admins can upload product images
+      allow write: if isAdmin() && isValidSize() && isImage();
       
-      // Store owners and admins can delete product images
-      allow delete: if isAuthenticated() || isAdmin();
+      // Only admins can delete product images
+      allow delete: if isAdmin();
     }
     
     // ============================================
@@ -69,13 +67,11 @@ service firebase.storage {
       // Everyone can read store images
       allow read: if true;
       
-      // Store owners can upload store images
-      allow write: if isAuthenticated() && 
-                      isValidSize() && 
-                      isImage();
+      // Only admins can upload store images
+      allow write: if isAdmin() && isValidSize() && isImage();
       
-      // Store owners and admins can delete store images
-      allow delete: if isAuthenticated() || isAdmin();
+      // Only admins can delete store images
+      allow delete: if isAdmin();
     }
     
     // ============================================
@@ -98,15 +94,14 @@ service firebase.storage {
     // Order Documents/Receipts
     // ============================================
     match /orders/{orderId}/{fileName} {
-      // Users can read their order documents
-      // Store owners can read order documents for their orders
-      allow read: if isAuthenticated();
+      // Only admins can read order documents
+      allow read: if isAdmin();
       
-      // Only authenticated users can upload order documents
-      allow write: if isAuthenticated() && isValidSize();
+      // Only admins can upload order documents
+      allow write: if isAdmin() && isValidSize();
       
-      // Users and admins can delete order documents
-      allow delete: if isAuthenticated() || isAdmin();
+      // Only admins can delete order documents
+      allow delete: if isAdmin();
     }
     
     // ============================================

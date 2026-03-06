@@ -1,4 +1,20 @@
+// ============================================
+// Fix Next.js 16 RangeError: Maximum call stack size exceeded
+// require('next/jest') 會載入 unhandled-rejection.tsx，佢會：
+// 1. 加一個 unhandledRejection listener（呼叫 patched setImmediate → 無限遞歸）
+// 2. Patch process.removeAllListeners / process.on / process.addListener
+// 但 process.removeListener 冇被 patch，可以用嚟移除 listener。
+// 必須喺呢度做，因為 setupFilesAfterEnv 已經太遲。
+// ============================================
+process.env.NEXT_UNHANDLED_REJECTION_FILTER = 'silent'
+
 const nextJest = require('next/jest')
+
+// 移除 Next.js 的 unhandledRejection listener（佢會造成 setImmediate 無限遞歸）
+const __nextListeners = process.rawListeners('unhandledRejection')
+for (const __l of __nextListeners) {
+    process.removeListener('unhandledRejection', __l)
+}
 
 const createJestConfig = nextJest({
     // Provide the path to your Next.js app to load next.config.js and .env files

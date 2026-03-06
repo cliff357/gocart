@@ -82,7 +82,7 @@ gh secret list -R cliff357/gocart
 1. **訪問網站**: 點擊 Vercel 提供的網址
 2. **檢查功能**:
    - ✅ 首頁載入正常
-   - ✅ 動態路由工作（`/shop/[username]`）
+   - ✅ 動態路由工作（`/product/[productId]`）
    - ✅ Firebase 連接正常（按 F12 查看 Console）
 
 3. **測試 Firebase 連接**:
@@ -184,8 +184,7 @@ gh secret list -R cliff357/gocart
 4. ✅ **測試完整流程**
    - 用戶註冊/登入
    - 商品瀏覽
-   - 購物車功能
-   - 訂單建立
+   - 商品預約（Reserve）
 
 ---
 

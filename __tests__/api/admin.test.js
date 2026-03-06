@@ -35,7 +35,6 @@ import {
 const originalEnv = process.env
 
 beforeEach(() => {
-    jest.resetModules()
     process.env = { ...originalEnv }
     __resetMockAuthResult()
 })
@@ -54,8 +53,7 @@ describe('API 認證測試 (Security)', () => {
     describe('Admin Invite API - 認證檢查', () => {
         let POST
 
-        beforeEach(async () => {
-            jest.resetModules()
+        beforeAll(async () => {
             const module = await import('@/app/api/admin/invite/route')
             POST = module.POST
         })
@@ -146,8 +144,7 @@ describe('API 認證測試 (Security)', () => {
     describe('Remote Config API - 認證檢查', () => {
         let POST
 
-        beforeEach(async () => {
-            jest.resetModules()
+        beforeAll(async () => {
             const module = await import('@/app/api/admin/remote-config/route')
             POST = module.POST
         })
@@ -197,17 +194,17 @@ describe('API 認證測試 (Security)', () => {
 describe('Admin Invite API (/api/admin/invite)', () => {
     let POST
 
-    beforeEach(async () => {
-        jest.resetModules()
-        
+    beforeAll(async () => {
+        const module = await import('@/app/api/admin/invite/route')
+        POST = module.POST
+    })
+
+    beforeEach(() => {
         // 設置為已認證的 admin
         __setMockAuthResult({
             success: true,
             user: { uid: 'admin_123', email: 'admin@test.com', isAdmin: true }
         })
-        
-        const module = await import('@/app/api/admin/invite/route')
-        POST = module.POST
     })
 
     describe('驗證 (Validation)', () => {
@@ -312,15 +309,7 @@ describe('Remote Config API (/api/admin/remote-config)', () => {
     describe('POST - 更新配色', () => {
         let POST
 
-        beforeEach(async () => {
-            jest.resetModules()
-            
-            // 設置為已認證的 admin
-            __setMockAuthResult({
-                success: true,
-                user: { uid: 'admin_123', email: 'admin@test.com', isAdmin: true }
-            })
-            
+        beforeAll(async () => {
             // Mock firebase-admin
             jest.doMock('firebase-admin', () => ({
                 apps: [],
@@ -336,6 +325,14 @@ describe('Remote Config API (/api/admin/remote-config)', () => {
 
             const module = await import('@/app/api/admin/remote-config/route')
             POST = module.POST
+        })
+
+        beforeEach(() => {
+            // 設置為已認證的 admin
+            __setMockAuthResult({
+                success: true,
+                user: { uid: 'admin_123', email: 'admin@test.com', isAdmin: true }
+            })
         })
 
         it('應該在缺少 colors 時返回 400', async () => {

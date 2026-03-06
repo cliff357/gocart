@@ -114,12 +114,7 @@ jest.mock('@/lib/firebase/firestore', () => ({
 
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import Banner from '@/components/Banner';
 import Hero from '@/components/Hero';
-import PageTitle from '@/components/PageTitle';
-import Newsletter from '@/components/Newsletter';
-import OurSpecs from '@/components/OurSpec';
-import CategoriesMarquee from '@/components/CategoriesMarquee';
 
 // ============================================
 // Navbar Component Tests
@@ -149,10 +144,10 @@ describe('Navbar 組件', () => {
         expect(searchInput).toBeInTheDocument();
     });
 
-    it('應該有 Login 按鈕', () => {
+    it('應該有 About 連結', () => {
         render(<Navbar />);
-        const loginButtons = screen.getAllByText('Login');
-        expect(loginButtons.length).toBeGreaterThan(0);
+        const aboutLinks = screen.getAllByText('About');
+        expect(aboutLinks.length).toBeGreaterThan(0);
     });
 
     it('搜尋輸入框可以輸入文字', () => {
@@ -181,34 +176,35 @@ describe('Footer 組件', () => {
 
     it('應該顯示版權資訊', () => {
         render(<Footer />);
-        expect(screen.getByText(/Copyright.*MyLoYau/i)).toBeInTheDocument();
+        expect(screen.getByText(/LOYAULTYCLUB.*All Rights Reserved/i)).toBeInTheDocument();
     });
 
-    it('應該有 PRODUCTS 區塊', () => {
+    it('應該有 CATEGORIES 區塊', () => {
         render(<Footer />);
-        expect(screen.getByText('PRODUCTS')).toBeInTheDocument();
+        expect(screen.getByText('CATEGORIES')).toBeInTheDocument();
     });
 
-    it('應該有 CONTACT 區塊', () => {
+    it('應該有 FOLLOW US 區塊', () => {
         render(<Footer />);
-        expect(screen.getByText('CONTACT')).toBeInTheDocument();
+        expect(screen.getByText('FOLLOW US')).toBeInTheDocument();
     });
 
     it('應該有社交媒體連結', () => {
         render(<Footer />);
-        const socialLinks = document.querySelectorAll('a[href*="facebook"], a[href*="instagram"], a[href*="twitter"], a[href*="linkedin"]');
-        expect(socialLinks.length).toBe(4);
+        const socialLinks = document.querySelectorAll('a[href*="instagram"], a[href*="threads"], a[href*="mailto:"]');
+        expect(socialLinks.length).toBe(3);
     });
 
-    it('應該有產品分類連結', () => {
+    it('應該有 QUICK LINKS 區塊', () => {
         render(<Footer />);
-        expect(screen.getByText('Earphones')).toBeInTheDocument();
-        expect(screen.getByText('Headphones')).toBeInTheDocument();
+        expect(screen.getByText('QUICK LINKS')).toBeInTheDocument();
+        expect(screen.getByText('Shop')).toBeInTheDocument();
     });
 
     it('應該有聯絡資訊', () => {
         render(<Footer />);
-        expect(screen.getByText('contact@example.com')).toBeInTheDocument();
+        const mailLink = document.querySelector('a[href="mailto:loyaultyclub@gmail.com"]');
+        expect(mailLink).toBeInTheDocument();
     });
 
     it('應該有 Privacy Policy 連結', () => {
@@ -218,218 +214,25 @@ describe('Footer 組件', () => {
 });
 
 // ============================================
-// Banner Component Tests
-// ============================================
-describe('Banner 組件', () => {
-    beforeEach(() => {
-        // jsdom 沒有 navigator.clipboard，需要 mock
-        Object.assign(navigator, {
-            clipboard: {
-                writeText: jest.fn().mockResolvedValue(undefined),
-            },
-        });
-    });
-
-    it('應該顯示促銷文字', () => {
-        render(<Banner />);
-        expect(screen.getByText(/20% OFF/i)).toBeInTheDocument();
-    });
-
-    it('應該有 Claim Offer 按鈕', () => {
-        render(<Banner />);
-        expect(screen.getByText('Claim Offer')).toBeInTheDocument();
-    });
-
-    it('點擊關閉按鈕後應該隱藏 Banner', () => {
-        render(<Banner />);
-        // Banner 有兩個按鈕：Claim Offer 和關閉 (svg)
-        const buttons = document.querySelectorAll('button');
-        // 最後一個是關閉按鈕
-        const closeButton = buttons[buttons.length - 1];
-        fireEvent.click(closeButton);
-
-        expect(screen.queryByText(/20% OFF/i)).not.toBeInTheDocument();
-    });
-
-    it('點擊 Claim Offer 應該隱藏 Banner', () => {
-        render(<Banner />);
-        fireEvent.click(screen.getByText('Claim Offer'));
-        expect(screen.queryByText(/20% OFF/i)).not.toBeInTheDocument();
-    });
-
-    it('點擊 Claim Offer 應該觸發 toast', () => {
-        const toast = require('react-hot-toast');
-        render(<Banner />);
-        fireEvent.click(screen.getByText('Claim Offer'));
-        expect(toast.success).toHaveBeenCalledWith('Coupon copied to clipboard!');
-    });
-});
-
-// ============================================
 // Hero Component Tests
 // ============================================
 describe('Hero 組件', () => {
-    it('應該渲染主標題', () => {
+    it('應該渲染 banner 容器', () => {
         render(<Hero />);
-        expect(screen.getByText(/Gadgets you'll love/i)).toBeInTheDocument();
+        const container = document.querySelector('.rounded-3xl');
+        expect(container).toBeInTheDocument();
     });
 
-    it('應該顯示起始價格', () => {
+    it('容器應有最小高度', () => {
         render(<Hero />);
-        expect(screen.getByText('$4.90')).toBeInTheDocument();
+        const container = document.querySelector('[style*="min-height"]');
+        expect(container).toBeInTheDocument();
     });
 
-    it('應該有 LEARN MORE 按鈕', () => {
-        render(<Hero />);
-        expect(screen.getByText('LEARN MORE')).toBeInTheDocument();
-    });
-
-    it('應該顯示 NEWS 標籤', () => {
-        render(<Hero />);
-        expect(screen.getByText('NEWS')).toBeInTheDocument();
-    });
-
-    it('應該有 Best products 區塊', () => {
-        render(<Hero />);
-        expect(screen.getByText('Best products')).toBeInTheDocument();
-    });
-
-    it('應該有 20% discounts 區塊', () => {
-        render(<Hero />);
-        expect(screen.getByText('20% discounts')).toBeInTheDocument();
-    });
-
-    it('應該有 View more 連結', () => {
-        render(<Hero />);
-        const viewMore = screen.getAllByText('View more');
-        expect(viewMore.length).toBe(2);
-    });
-
-    it('應該渲染 hero 圖片', () => {
+    it('沒有 banner 時不應渲染圖片', () => {
         render(<Hero />);
         const images = document.querySelectorAll('img');
-        expect(images.length).toBeGreaterThanOrEqual(3);
+        expect(images.length).toBe(0);
     });
 });
 
-// ============================================
-// PageTitle Component Tests
-// ============================================
-describe('PageTitle 組件', () => {
-    it('應該顯示標題', () => {
-        render(<PageTitle heading="購物車" text="管理你的購物車" linkText="繼續購物" />);
-        expect(screen.getByText('購物車')).toBeInTheDocument();
-    });
-
-    it('應該顯示說明文字', () => {
-        render(<PageTitle heading="購物車" text="管理你的購物車" linkText="繼續購物" />);
-        expect(screen.getByText('管理你的購物車')).toBeInTheDocument();
-    });
-
-    it('應該顯示連結文字', () => {
-        render(<PageTitle heading="購物車" text="描述" linkText="繼續購物" />);
-        expect(screen.getByText('繼續購物')).toBeInTheDocument();
-    });
-
-    it('應該使用預設 path="/"', () => {
-        render(<PageTitle heading="標題" text="文字" linkText="連結" />);
-        const link = document.querySelector('a[href="/"]');
-        expect(link).toBeInTheDocument();
-    });
-
-    it('應該接受自定義 path', () => {
-        render(<PageTitle heading="標題" text="文字" linkText="連結" path="/shop" />);
-        const link = document.querySelector('a[href="/shop"]');
-        expect(link).toBeInTheDocument();
-    });
-});
-
-// ============================================
-// Newsletter Component Tests
-// ============================================
-describe('Newsletter 組件', () => {
-    it('應該顯示 Join Newsletter 標題', () => {
-        render(<Newsletter />);
-        expect(screen.getByText('Join Newsletter')).toBeInTheDocument();
-    });
-
-    it('應該有 email 輸入框', () => {
-        render(<Newsletter />);
-        const input = screen.getByPlaceholderText('Enter your email address');
-        expect(input).toBeInTheDocument();
-    });
-
-    it('應該有 Get Updates 按鈕', () => {
-        render(<Newsletter />);
-        expect(screen.getByText('Get Updates')).toBeInTheDocument();
-    });
-
-    it('email 輸入框可以輸入文字', () => {
-        render(<Newsletter />);
-        const input = screen.getByPlaceholderText('Enter your email address');
-        fireEvent.change(input, { target: { value: 'test@example.com' } });
-        expect(input.value).toBe('test@example.com');
-    });
-});
-
-// ============================================
-// OurSpecs Component Tests
-// ============================================
-describe('OurSpecs 組件', () => {
-    it('應該顯示 Our Specifications 標題', () => {
-        render(<OurSpecs />);
-        expect(screen.getByText('Our Specifications')).toBeInTheDocument();
-    });
-
-    it('應該顯示 Free Shipping', () => {
-        render(<OurSpecs />);
-        expect(screen.getByText('Free Shipping')).toBeInTheDocument();
-    });
-
-    it('應該顯示 7 Days easy Return', () => {
-        render(<OurSpecs />);
-        expect(screen.getByText('7 Days easy Return')).toBeInTheDocument();
-    });
-
-    it('應該顯示 24/7 Customer Support', () => {
-        render(<OurSpecs />);
-        expect(screen.getByText('24/7 Customer Support')).toBeInTheDocument();
-    });
-
-    it('應該渲染 3 個 spec 項目', () => {
-        render(<OurSpecs />);
-        const icons = screen.getAllByTestId('spec-icon');
-        expect(icons.length).toBe(3);
-    });
-});
-
-// ============================================
-// CategoriesMarquee Component Tests
-// ============================================
-describe('CategoriesMarquee 組件', () => {
-    it('應該顯示分類名稱', () => {
-        render(<CategoriesMarquee />);
-        const headphones = screen.getAllByText('Headphones');
-        expect(headphones.length).toBeGreaterThan(0);
-    });
-
-    it('應該顯示多個分類', () => {
-        render(<CategoriesMarquee />);
-        expect(screen.getAllByText('Speakers').length).toBeGreaterThan(0);
-        expect(screen.getAllByText('Watch').length).toBeGreaterThan(0);
-        expect(screen.getAllByText('Earbuds').length).toBeGreaterThan(0);
-    });
-
-    it('分類應該是按鈕', () => {
-        render(<CategoriesMarquee />);
-        const buttons = document.querySelectorAll('button');
-        expect(buttons.length).toBeGreaterThan(0);
-    });
-
-    it('應該有重複的分類（marquee 效果）', () => {
-        render(<CategoriesMarquee />);
-        // 4 categories × 4 repeats = 16
-        const headphones = screen.getAllByText('Headphones');
-        expect(headphones.length).toBeGreaterThan(1);
-    });
-});

@@ -1,8 +1,10 @@
 # 🔍 LoyaultyClub Codebase 完整分析報告
 
+> ⚠️ **歷史文檔**：此報告生成於 2026年1月14日。報告中許多問題已在後續開發中修復（含 API 認證、測試覆蓋、安全規則等）。最新狀態請參考 [TESTING.md](./TESTING.md)。
+
 **生成日期**: 2026年1月14日  
 **項目**: LoyaultyClub - 手作陶藝精品電商平台  
-**技術棧**: Next.js 14 (App Router) + Firebase + Redux Toolkit + Tailwind CSS
+**技術棧**: Next.js 16 (App Router) + Firebase + Redux Toolkit + Tailwind CSS 4
 
 ---
 
