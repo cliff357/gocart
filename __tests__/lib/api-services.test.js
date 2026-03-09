@@ -25,9 +25,6 @@ const mockOrders = [
 const mockAddresses = [
     { id: 'addr-1', userId: 'user-1', street: '123 Main St', city: 'HK', country: 'HK' },
 ];
-const mockCoupons = [
-    { id: 'coupon-1', code: 'SAVE10', discount: 10, isPublic: true, active: true, expiresAt: '2026-12-31', usageCount: 0, usageLimit: 100 },
-];
 
 jest.mock('@/lib/services/FirestoreService', () => ({
     productService: {
@@ -55,17 +52,6 @@ jest.mock('@/lib/services/FirestoreService', () => ({
         getByUserId: jest.fn((uid) => Promise.resolve(mockAddresses.filter(a => a.userId === uid))),
         create: jest.fn(() => Promise.resolve('new-addr-id')),
     },
-    couponService: {
-        getAll: jest.fn(() => Promise.resolve(mockCoupons)),
-        getById: jest.fn((id) => Promise.resolve(mockCoupons.find(c => c.id === id) || null)),
-        getByCode: jest.fn((code) => Promise.resolve(mockCoupons.find(c => c.code === code) || null)),
-        getPublic: jest.fn(() => Promise.resolve(mockCoupons.filter(c => c.isPublic))),
-        validate: jest.fn((code) => {
-            const coupon = mockCoupons.find(c => c.code === code);
-            if (!coupon) return Promise.resolve({ valid: false, message: 'Invalid coupon code' });
-            return Promise.resolve({ valid: true, coupon });
-        }),
-    },
     categoryService: {
         getAll: jest.fn(() => Promise.resolve([])),
         getTree: jest.fn(() => Promise.resolve([])),
@@ -75,7 +61,6 @@ jest.mock('@/lib/services/FirestoreService', () => ({
 import ApiService, {
     ProductApiService,
     OrderApiService,
-    CouponApiService,
 } from '@/lib/services/ApiService';
 
 // 加速測試：用 jest fake timers 跳過 simulateDelay
@@ -116,7 +101,6 @@ describe('ApiService 中央入口', () => {
     it('應該包含所有服務', () => {
         expect(ApiService.Product).toBe(ProductApiService);
         expect(ApiService.Order).toBe(OrderApiService);
-        expect(ApiService.Coupon).toBe(CouponApiService);
     });
 });
 
@@ -207,32 +191,5 @@ describe('OrderApiService', () => {
 // ============================================
 // Address API Service
 // ============================================
-// Coupon API Service
-// ============================================
-describe('CouponApiService', () => {
-    it('getAllCoupons: 返回優惠券列表', async () => {
-        const response = await runWithTimers(() => CouponApiService.getAllCoupons());
-        expectSuccessResponse(response);
-        expect(Array.isArray(response.data)).toBe(true);
-    });
-
-    it('getPublicCoupons: 返回公開優惠券', async () => {
-        const response = await runWithTimers(() => CouponApiService.getPublicCoupons());
-        expectSuccessResponse(response);
-        expect(Array.isArray(response.data)).toBe(true);
-    });
-
-    it('getCoupon: 不存在的優惠券返回錯誤', async () => {
-        const response = await runWithTimers(() => CouponApiService.getCoupon('INVALID'));
-        expectErrorResponse(response);
-        expect(response.message).toContain('not found');
-    });
-
-    it('validateCoupon: 不存在的優惠券驗證失敗', async () => {
-        const response = await runWithTimers(() => CouponApiService.validateCoupon('FAKE', 'user-1', 100));
-        expectErrorResponse(response);
-        expect(response.message).toContain('Invalid');
-    });
-});
 
 

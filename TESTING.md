@@ -49,13 +49,13 @@ feature/* ──→ dev ──→ main
           ╱╲
          ╱ P4 ╲     E2E 端到端 (Playwright)       — 52 tests
         ╱──────╲
-       ╱  P3    ╲    API / Service / Admin         — 37 tests
+       ╱  P3    ╲    API / Service / Admin         — 33 tests
       ╱──────────╲
      ╱    P2      ╲   Redux Slice / State          — 11 tests
     ╱──────────────╲
    ╱      P1        ╲  UI 組件渲染 + 交互          — 55 tests
   ╱──────────────────╲
- ╱   P0 (Emulator)    ╲ Security Rules + CRUD      — 72 tests
+ ╱   P0 (Emulator)    ╲ Security Rules + CRUD      — 52 tests
 ╱────────────────────────╲
 ```
 
@@ -202,7 +202,7 @@ npm run test:components     # 只跑 __tests__/components/（105 tests）
 npx jest --testPathPatterns=lib   # 只跑 __tests__/lib/（50 tests）
 
 # Emulator 測試（需要 Java 21+）
-npm run test:emulator       # 啟動 Emulator → 跑測試 → 自動關閉（72 tests）
+npm run test:emulator       # 啟動 Emulator → 跑測試 → 自動關閉（52 tests）
 
 # E2E 測試（需要 Chromium）
 npm run test:e2e            # 自動啟動 dev server → 跑 Playwright（52 tests）
@@ -215,7 +215,7 @@ npm run test:all            # Jest + Emulator
 ### 九、CI/CD 規則
 
 - GitHub Actions 在每次 push 自動運行（`.github/workflows/test.yml`）
-- CI 跑的測試：Jest 132 tests + Emulator 72 tests
+- CI 跑的測試：Jest 99 tests + Emulator 52 tests
 - E2E 目前只在本地跑（後續可加入 CI）
 - **所有測試通過才能 merge PR**
 
@@ -299,6 +299,13 @@ npm run test:all            # Jest + Emulator
 | 3/5 | 🗑️ 移除 UserApiService — 已用 Firebase Auth + AuthContext 取代 (-5 tests) (109 Jest + 72 Emulator + 52 E2E = **233 tests**) | ✅ |
 | 3/5 | 🗑️ 移除 AddressApiService — AddressModal 已刪，無消費者 (-3 tests) (106 Jest + 72 Emulator + 52 E2E = **230 tests**) | ✅ |
 | 3/5 | 🗑️ 移除 DashboardApiService + MiscApiService — 無頁面使用 (-3 tests) (103 Jest + 72 Emulator + 52 E2E = **227 tests**) | ✅ |
+| 3/9 | 🗑️ 移除 Ratings rules + 測試 — Rating 功能已刪，rules 無存在必要 (-4 emulator tests) (103 Jest + 68 Emulator + 52 E2E = **223 tests**) | ✅ |
+| 3/9 | 🗑️ 移除 Carts rules tests — 購物車停用，與 wildcard deny 重疊 (-3 emulator tests) (103 Jest + 65 Emulator + 52 E2E = **220 tests**) | ✅ |
+| 3/9 | 🗑️ 移除 Addresses rules + 測試 — 地址功能已刪，rules 回落 default deny (-4 emulator tests) (103 Jest + 61 Emulator + 52 E2E = **216 tests**) | ✅ |
+| 3/9 | 🗑️ 移除 Ratings CRUD tests — Rating 功能已全部清除 (-3 emulator tests) (103 Jest + 58 Emulator + 52 E2E = **213 tests**) | ✅ |
+| 3/9 | 🗑️ 移除 Coupon 全條鏈 — 頁面/ApiService/FirestoreService/Rules/Tests (-4 Jest, -2 emulator) (99 Jest + 56 Emulator + 52 E2E = **207 tests**) | ✅ |
+| 3/9 | 🗑️ 移除 Carts CRUD tests — 購物車停用 (-2 emulator tests) (99 Jest + 54 Emulator + 52 E2E = **205 tests**) | ✅ |
+| 3/9 | 🗑️ 移除 Addresses CRUD tests — 地址功能已刪 (-2 emulator tests) (99 Jest + 52 Emulator + 52 E2E = **203 tests**) | ✅ |
 
 ---
 
@@ -320,7 +327,7 @@ __tests__/
 │   └── firestore-crud.test.js       # 21 個 CRUD 測試
 ├── lib/
 │   ├── redux-slices.test.js         # P2: 11 個 Redux Slice 測試
-│   └── api-services.test.js         # P3: 16 個 API Service 測試
+│   └── api-services.test.js         # P3: 12 個 API Service 測試
 └── utils/
     └── test-utils.js                # 測試工具
 
@@ -334,7 +341,7 @@ e2e/
 |------|------|------|----------|
 | UI 組件 (P1) | Jest + Testing Library | 105 | ~0.4s |
 | Redux Slice (P2) | Jest | 23 | ~0.1s |
-| API Service + Admin + Notification (P3) | Jest + Fake Timers | 48 | ~0.2s |
+| API Service + Admin + Notification (P3) | Jest + Fake Timers | 44 | ~0.2s |
 | Security Rules | Jest + Firebase Emulator | 51 | ~2s |
 | CRUD 操作 | Jest + Firebase Emulator | 21 | ~1s |
 | E2E (P4) | Playwright + Chromium | 52 | ~15s |
@@ -425,29 +432,6 @@ e2e/
 | 普通用戶不能創建訂單 | 權限控制 |
 | Admin 可刪除訂單 | 管理員權限 |
 
-#### Ratings Collection (4 tests)
-| 測試 | 描述 |
-|------|------|
-| 任何人可讀評分 | 評分公開 |
-| Admin 可創建評分 | 管理員權限 |
-| 普通用戶不能創建評分 | 權限控制 |
-| Admin 可刪除評分 | 管理員權限 |
-
-#### Carts Collection (3 tests)
-| 測試 | 描述 |
-|------|------|
-| 未登入用戶不能讀取購物車 | 購物車隱私 |
-| 已登入用戶不能讀取購物車 | 無明確規則 |
-| Admin 也不能寫入購物車 | 購物車功能未啟用 |
-
-#### Addresses Collection (4 tests)
-| 測試 | 描述 |
-|------|------|
-| 未登入用戶不能讀取地址 | 地址隱私 |
-| 已登入用戶可以讀取地址 | 已認證即可讀 |
-| Admin 可以創建地址 | 管理員權限 |
-| 普通用戶不能創建地址 | 權限控制 |
-
 #### Admin Collection (3 tests)
 | 測試 | 描述 |
 |------|------|
@@ -508,23 +492,6 @@ e2e/
 - 創建訂單
 - 按狀態查詢
 - 更新狀態
-
-#### Ratings CRUD (3 tests)
-- 創建評分
-- 按商品查詢
-- 計算平均評分
-
-#### Coupons CRUD (2 tests)
-- 創建優惠券
-- 查詢有效優惠券
-
-#### Carts CRUD (2 tests)
-- 創建購物車
-- 更新購物車
-
-#### Addresses CRUD (2 tests)
-- 創建地址
-- 按用戶查詢
 
 ---
 
@@ -646,7 +613,7 @@ e2e/
 > - 移除 getStoreDashboard（不再存在）
 
 #### ApiService 中央入口 (1 test)
-- 包含所有 7 個服務（Product, User, Order, Address, Coupon, Dashboard, Misc）
+- 包含所有服務（Product, Order）
 
 #### ProductApiService (7 tests)
 - getAllProducts / getProduct / getProductsByCategory
@@ -657,11 +624,6 @@ e2e/
 - getAllOrders / getOrder
 - 不存在的訂單返回錯誤
 - createOrder：建立訂單
-
-#### CouponApiService (4 tests)
-- getAllCoupons / getPublicCoupons
-- 不存在的優惠券返回錯誤
-- validateCoupon 驗證失敗
 
 ---
 
@@ -808,7 +770,7 @@ e2e/
 # 運行所有 Jest 測試（組件 + Redux + API + Admin + Notification，194 tests，~0.9s）
 npm run test:components
 
-# 運行 Emulator 測試（72 tests，~3s）
+# 運行 Emulator 測試（52 tests，~3s）
 npm run test:emulator
 
 # 運行 E2E 測試（52 tests，~15s，自動啟動 dev server）

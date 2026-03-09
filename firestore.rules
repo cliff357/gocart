@@ -94,32 +94,9 @@ service cloud.firestore {
     }
 
     // ============================================
-    // Ratings Collection - 公開讀取
-    // ============================================
-    match /ratings/{ratingId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // ============================================
     // Orders Collection - 只有 Admin 可讀寫
     // ============================================
     match /orders/{orderId} {
-      allow read, write: if isAdmin();
-    }
-
-    // ============================================
-    // Addresses Collection - 需要登入才可讀
-    // ============================================
-    match /addresses/{addressId} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
-    }
-
-    // ============================================
-    // Coupons Collection - 只有 Admin 可讀寫
-    // ============================================
-    match /coupons/{couponId} {
       allow read, write: if isAdmin();
     }
 
