@@ -282,8 +282,6 @@ API 層包裝，為未來 REST API 做準備
 |------|------|
 | `ColorSwitcher` | Debug 顏色切換器 |
 | `FirebaseStatus` | Firebase 連線狀態指示 |
-| `ThemeSwitcherExample` | 主題切換示例 |
-| `Logo.examples.js` | Logo 使用範例 |
 
 ---
 
