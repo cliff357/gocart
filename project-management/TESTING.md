@@ -1,7 +1,7 @@
 # 🧪 LoyaultyClub 測試文檔
 
 > 📅 創建日期：2026年2月5日  
-> 📅 最後更新：2026年3月13日  
+> 📅 最後更新：2026年3月16日  
 > 👤 負責人：SA Team  
 > 📦 項目：LoyaultyClub (老友賣蘿柚企劃)
 
@@ -53,7 +53,7 @@ feature/* ──→ dev ──→ main
       ╱──────────╲
      ╱    P2      ╲   Redux Slice / State          — 11 tests
     ╱──────────────╲
-   ╱      P1        ╲  UI 組件渲染 + 交互          — 71 tests
+   ╱      P1        ╲  UI 組件 + 頁面渲染 + 交互   — 149 tests
   ╱──────────────────╲
  ╱   P0 (Emulator)    ╲ Security Rules + CRUD      — 52 tests
 ╱────────────────────────╲
@@ -193,13 +193,13 @@ const runWithTimers = async (promise) => {
 
 ```bash
 # 日常開發（最常用，~0.9s）
-npm test                    # 運行所愉 Jest 測試（132 tests）
+npm test                    # 運行所有 Jest 測試（193 tests）
 
 # 只跑組件測試
-npm run test:components     # 只跑 __tests__/components/（105 tests）
+npm run test:components     # 只跑 __tests__/components/（148 tests）
 
 # Redux + API Service 測試
-npx jest --testPathPatterns=lib   # 只跑 __tests__/lib/（50 tests）
+npx jest --testPathPatterns=lib   # 只跑 __tests__/lib/（23 tests）
 
 # Emulator 測試（需要 Java 21+）
 npm run test:emulator       # 啟動 Emulator → 跑測試 → 自動關閉（52 tests）
@@ -215,7 +215,7 @@ npm run test:all            # Jest + Emulator
 ### 九、CI/CD 規則
 
 - GitHub Actions 在每次 push 自動運行（`.github/workflows/test.yml`）
-- CI 跑的測試：Jest 99 tests + Emulator 52 tests
+- CI 跑的測試：Jest 193 tests + Emulator 52 tests
 - E2E 目前只在本地跑（後續可加入 CI）
 - **所有測試通過才能 merge PR**
 
@@ -229,7 +229,7 @@ npm run test:all            # Jest + Emulator
 | Jest 嘗試跑 E2E 文件報錯 | `jest.config.js` 的 `testPathIgnorePatterns` 加入 `e2e/` |
 | Emulator 需要 Java | 安裝 OpenJDK 21：`brew install openjdk@21` 並加入 PATH |
 | 組件測試已涵蓋 | 不需要在 E2E 重複驗證已有組件測試的功能 |
-| About / Contact 指向 `/` | 這些頁面路由不存在，Navbar 連結都指向首頁 |
+| ~~About / Contact 指向 `/`~~ | ✅ 路由已建好，E2E 已覆蓋（3/16 審計確認） |
 | `jest.resetModules()` 破壞 mock closure | 不要在 `beforeEach` 中使用 `jest.resetModules()`，改用 `beforeAll` 匯入 module，`beforeEach` 只重置 mock state |
 | Next.js 16 `RangeError: Maximum call stack size exceeded` | 全部測試一起跑時 `unhandled-rejection.tsx` 會觸發遞歸。使用 `--forceExit` 或分開跑各 suite |
 | ApiService mock Firestore | API Service 已改用 FirestoreService，測試需要 `jest.mock('@/lib/services/FirestoreService')` 提供 mock 數據 |
@@ -317,6 +317,8 @@ npm run test:all            # Jest + Emulator
 | 3/16 | ✅ Phase 2 文件 1: `admin-pages-auth.test.jsx` — Login + Dashboard (+11 tests) (126 Jest + 52 Emulator + 52 E2E = **230 tests**) | ✅ |
 | 3/16 | ✅ Phase 2 文件 2: `admin-pages-crud.test.jsx` — Categories/Reservations/Todo/About Setting (+24 tests) (150 Jest + 52 Emulator + 52 E2E = **254 tests**) | ✅ |
 | 3/16 | ✅ Phase 2 文件 3: `admin-pages-complex.test.jsx` — Products×3/HomeSetting/Admins/Notifications (+33 tests) (183 Jest + 52 Emulator + 52 E2E = **287 tests**) 🎉 Phase 2 完成！ | ✅ |
+| 3/16 | 🔍 全站測試覆蓋審計 — 審計 23 頁面 + 17 組件 + 15 lib 文件，識別 3 個主要 Gap（ProductDetails/Shop/About） | ✅ |
+| 3/16 | ✅ Phase 3 Gap #1: `ProductDetails.test.jsx` — 圖片畫廊/折扣計算/選項選擇/相關產品/Reserve (+10 tests) (193 Jest + 52 Emulator + 52 E2E = **297 tests**) | ✅ |
 
 ---
 
@@ -333,13 +335,14 @@ __tests__/
 │   ├── admin-pages-crud.test.jsx    # P2-F2: 24 個 Admin 頁面測試 (Categories/Reservations/Todo/About)
 │   ├── admin-pages-complex.test.jsx # P2-F3: 33 個 Admin 頁面測試 (Products×3/HomeSetting/Admins/Notifications)
 │   ├── Loading.test.jsx             # P1: 2 個 Loading 組件測試
-│   ├── modals.test.jsx              # P1: 20 個彈窗組件測試 (預約/地址)
+│   ├── modals.test.jsx              # P1: 14 個預約彈窗測試 (ReservationModal)
+│   ├── ProductDetails.test.jsx      # P3-Gap1: 10 個產品詳情測試 (畫廊/折扣/選項/相關/Reserve)
 │   ├── ui-components.test.jsx       # P1: 9 個基礎組件測試 (Title + Logo)
-│   ├── ui-components-p1.test.jsx    # P1: 41 個進階組件測試
-│   └── ui-components-p2.test.jsx    # P1: 22 個內容組件測試 (最新/暢銷/描述/關於)
+│   ├── ui-components-p1.test.jsx    # P1: 18 個進階組件測試 (Navbar/Footer/Hero)
+│   └── ui-components-p2.test.jsx    # P1: 12 個內容組件測試 (LatestProducts/AboutSection)
 ├── emulator/
-│   ├── firestore-rules.test.js      # 51 個權限測試
-│   └── firestore-crud.test.js       # 21 個 CRUD 測試
+│   ├── firestore-rules.test.js      # 40 個權限測試
+│   └── firestore-crud.test.js       # 12 個 CRUD 測試
 ├── lib/
 │   ├── redux-slices.test.js         # P2: 11 個 Redux Slice 測試
 │   └── api-services.test.js         # P3: 12 個 API Service 測試
@@ -354,16 +357,17 @@ e2e/
 
 | 類型 | 框架 | 數量 | 運行時間 |
 |------|------|------|----------|
-| UI 組件 + Admin 組件 (P1) | Jest + Testing Library | 121 | ~0.5s |
+| UI 組件 + Admin 組件 (P1) | Jest + Testing Library | 71 | ~0.3s |
 | Admin 頁面 (Phase 2)      | Jest + Testing Library | 68  | ~0.8s |
+| Public 組件 (Phase 3)     | Jest + Testing Library | 10  | ~0.5s |
 | Redux Slice (P2) | Jest | 11 | ~0.1s |
 | API Service + Admin + Notification (P3) | Jest + Fake Timers | 33 | ~0.2s |
-| Security Rules | Jest + Firebase Emulator | 51 | ~2s |
-| CRUD 操作 | Jest + Firebase Emulator | 21 | ~1s |
+| Security Rules | Jest + Firebase Emulator | 40 | ~2s |
+| CRUD 操作 | Jest + Firebase Emulator | 12 | ~1s |
 | E2E (P4) | Playwright + Chromium | 52 | ~15s |
-| **總計** | | **357** |
+| **總計** | | **297** |
 
-> 💡 Jest 測試（183 個 × 13 suites）在 ~1.5 秒內完成！
+> 💡 Jest 測試（193 個 × 14 suites）在 ~2.2 秒內完成！
 
 ---
 
@@ -584,9 +588,9 @@ e2e/
 
 ---
 
-### 4c. P1 彈窗組件測試 (modals.test.jsx)
+### 4c. P1 預約彈窗測試 (modals.test.jsx)
 
-> 🆕 **3月2日新增**：測試 ReservationModal 互動彈窗
+> 🆕 **3月2日新增**：測試 ReservationModal 互動彈窗（AddressModal 已於 3/5 移除）
 
 #### ReservationModal (14 tests)
 - 打開/關閉狀態正確
@@ -601,6 +605,24 @@ e2e/
 - 關閉按鈕功能
 - 錯誤處理
 - 只填電話也能提交
+
+---
+
+### 4d. Phase 3 產品詳情測試 (ProductDetails.test.jsx)
+
+> 🆕 **3月16日新增**：Phase 3 Gap #1 — 全站最複雜用戶面向組件，259 行此前零覆蓋
+
+#### ProductDetails (10 tests)
+- 顯示產品名稱、價格、描述
+- Back to Shop 連結 + Shipping info
+- Reserve 按鈕渲染
+- 多圖模式 — grid + thumbnails
+- 單圖模式 — 隱藏 thumbnails
+- 有折扣 → 原價刪除線 + Save % badge
+- 無折扣 → 隱藏 badge
+- 點擊選項按鈕切換 selectedOptions
+- 載入 relatedProducts → Other Styles links
+- 點 Reserve → 打開 ReservationModal + 傳遞 selectedOptions
 
 ---
 
@@ -783,8 +805,8 @@ e2e/
 ### 本地運行
 
 ```bash
-# 運行所有 Jest 測試（組件 + Redux + API + Admin + Notification，194 tests，~0.9s）
-npm run test:components
+# 運行所有 Jest 測試（193 tests，~2.2s）
+npm test
 
 # 運行 Emulator 測試（52 tests，~3s）
 npm run test:emulator
@@ -802,9 +824,9 @@ npm run test:all
 ### CI/CD 自動運行
 
 Push 到 GitHub 後會自動：
-1. 運行 194 個 Jest 測試（組件 + Redux + API + Admin + Notification）
+1. 運行 193 個 Jest 測試（組件 + Redux + API + Admin + Notification + ProductDetails）
 2. 啟動 Firebase Emulator
-3. 運行 72 個 Emulator 測試
+3. 運行 52 個 Emulator 測試
 4. 回報結果
 
 > 💡 E2E 測試目前只在本地運行，CI/CD 集成可在後續加入
@@ -846,18 +868,25 @@ Push 到 GitHub 後會自動：
 | P4 | E2E 測試 (Playwright + Chromium 52 tests) | ✅ 完成 |
 | — | Merge 修復：dev → add_test_module 合併後 53 個測試失敗 | ✅ 已修復 (2/26) |
 | — | 🔒 安全修復：4 個 Critical 漏洞 + Emulator 測試更新 (54→72 tests) | ✅ 已修復 (3/2) |
+| — | 🔐 Admin Phase 1+2：組件 4 個 + 頁面 12 個 (+84 tests) | ✅ 完成 (3/12–3/16) |
+| P5 | 🔍 全站 Gap 審計：23 頁面 + 17 組件 + 15 lib，發現 3 個主要 Gap | ✅ 完成 (3/16) |
 
 ### 🎯 後續可改進方向
 
 | 優先 | 任務 | 說明 |
 |------|------|------|
 | ~~🔴 高~~ | ~~真實 API 替換 MockData~~ | ✅ 已完成 — ApiService 已改用 FirestoreService（2/26 merge） |
-| 🔴 高 | About / Contact 頁面 | 目前路由不存在，建好後要加 E2E 測試 |
+| ~~🔴 高~~ | ~~About / Contact 頁面~~ | ✅ 路由已建好 + E2E 已覆蓋（3/16 審計確認） |
+| ~~🔴 高~~ | ~~`ProductDetails.jsx` Jest 測試~~ | ✅ 完成 (3/16) — 10 tests 覆蓋畫廊/折扣/選項/相關產品/Reserve |
+| 🟡 中 | `Shop` 頁面 Jest 測試 | **78 行** — Redux useSelector + 搜索/分類篩選 + categoryService（建議 ~5-6 tests） |
+| 🟡 中 | `About` 頁面 Jest 測試 | **191 行** — Firestore timeline 載入 + IntersectionObserver 動畫 + DEFAULT_TIMELINE fallback（建議 ~4-5 tests） |
 | 🟡 中 | CI/CD E2E 集成 | 在 GitHub Actions 加入 Playwright 測試 |
 | 🟡 中 | 覆蓋率報告 | 啟用 Jest coverage threshold（目標 60%+） |
 | 🟢 低 | 登入 / 下單 E2E 流程 | 模擬完整用戶購物旅程 |
 | 🟢 低 | 視覺回歸測試 | Playwright screenshot comparison |
 | 🟢 低 | 性能測試 | Lighthouse CI |
+| 🟢 低 | `ColorSwitcher` / `FirebaseStatus` | Debug/Dev 工具，非用戶面向，優先級最低 |
+| ⚪ 清理 | `data/MockData.js` (656 行) | 全站零 import — dead code 候選，建議刪除 |
 
 ---
 
@@ -981,13 +1010,64 @@ Push 到 GitHub 後會自動：
 
 ---
 
+## 🔍 Phase 3：全站測試覆蓋 Gap Analysis
+
+> 📅 審計日期：2026年3月16日
+> 📋 觸發原因：Phase 2 Admin 測試完成後，對全站做完整覆蓋檢查，找出剩餘盲點
+> 🔬 方法：逐一檢查 23 頁面 + 17 組件 + 15 lib 文件 + 4 API 路由，交叉比對現有 16 個測試文件
+
+### 覆蓋率總覽
+
+| 類別 | 總數 | 已測試 | 覆蓋率 | 備註 |
+|------|------|--------|--------|------|
+| Admin 頁面 | 12 | 12 | **100%** ✅ | Phase 1+2 完成 |
+| Public 頁面 | 11 | 9（E2E） | **82%** | Shop/About 只有基本 E2E render |
+| 組件 | 17 | 15 | **88%** | ~~ProductDetails~~ ✅ / ColorSwitcher/FirebaseStatus 未測 |
+| API 路由 | 4 | 4 | **100%** ✅ | admin + notifications |
+| Services/Lib | 15 | 11（6 直測 + 5 mock） | **~73%** | appCheck/colors/themes/store 未測 |
+
+### Gap 優先級
+
+| 優先 | 組件/頁面 | 行數 | 現有覆蓋 | Gap 描述 | 建議測試 |
+|------|-----------|------|----------|----------|----------|
+| ~~🔴~~ | ~~`ProductDetails.jsx`~~ | ~~259~~ | ✅ **10 Jest** | ~~圖片畫廊、折扣計算、選項選擇、Reserve、相關產品~~ | ✅ 完成 (3/16) |
+| 🟡 | `(public)/shop/page.jsx` | 78 | E2E 基本 render | Redux `useSelector` 商品列表、`useSearchParams` 搜索/分類 URL 參數、`categoryService.getById` 分類名載入、篩選後 `ProductCard` 渲染 | ~5-6 Jest |
+| 🟡 | `(public)/about/page.jsx` | 191 | E2E 基本 render | `FirebaseFirestoreService.getDocument('settings','about')` timeline 載入、`IntersectionObserver` 滾動動畫（`TimelineItem` 子組件）、`DEFAULT_TIMELINE` fallback、hero + timeline + about 三段式 | ~4-5 Jest |
+| 🟢 | `ColorSwitcher.jsx` | 282 | 零 | Remote Config API + localStorage + CSS 變數切換。Debug 工具，非用戶面向 | 低優先 |
+| 🟢 | `FirebaseStatus.jsx` | 138 | 零 | Dev-only 狀態指示器，production 返回 `null` | 低優先 |
+
+### Dead Code 發現
+
+| 文件 | 行數 | 問題 | 建議 |
+|------|------|------|------|
+| `lib/data/MockData.js` | 656 | 全站零 import — `grep -r` 確認無任何文件引用 | 🗑️ 刪除 |
+
+### 未覆蓋但低風險的 Lib
+
+| 文件 | 原因 |
+|------|------|
+| `lib/firebase/appCheck.js` | 環境初始化，無業務邏輯 |
+| `lib/config/colors.js` | 靜態配置 |
+| `lib/config/themes.js` | 靜態配置 |
+| `lib/store.js` | Redux store 設定，組件測試間接覆蓋 |
+
+### 下一步行動
+
+1. ~~**🔴 ProductDetails 測試**~~ ✅ 完成 (3/16) — 10 tests，覆蓋全部 6 功能區
+2. **🟡 Shop 頁面測試** — 搜索/篩選是核心購物功能
+3. **🟡 About 頁面測試** — Firestore 動態載入 + fallback 邏輯
+4. **🗑️ 清理 MockData.js** — 656 行 dead code
+5. **🟡 CI/CD + 覆蓋率報告**
+
+---
+
 ## ❓ 常見問題
 
 ### Q: 為什麼不用 Mock？
 A: Mock 測試只測試你的假設，不測試真實行為。如果 Firebase API 改了，Mock 不會發現問題。
 
 ### Q: Emulator 測試慢嗎？
-A: 72 個測試只需 ~3 秒，非常快。
+A: 52 個測試只需 ~3 秒，非常快。
 
 ### Q: CI/CD 需要真實 Firebase 密鑰嗎？
 A: 不需要！Emulator 使用 `demo-` 開頭的 Project ID，完全離線運行。

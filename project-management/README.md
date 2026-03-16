@@ -8,7 +8,7 @@
 |------|------|---------|
 | [TESTING.md](TESTING.md) | 測試架構、測試計劃、已知問題 | 每次加測試或修復 |
 | [PROJECT_STATUS.md](PROJECT_STATUS.md) | 項目功能清單、進度總覽 | 每個功能完成後 |
-| [ADMIN_TESTING_PLAN.md](ADMIN_TESTING_PLAN.md) | Admin 頁面 Phase 2 測試計劃詳細記錄 | Phase 2 進行中 |
+| [ADMIN_TESTING_PLAN.md](ADMIN_TESTING_PLAN.md) | Admin 頁面 Phase 2 測試計劃詳細記錄（已封存） | Phase 2 已完成 |
 
 > 📦 歷史文檔（Code Review Report、Session Log、Progress & Todo）已移至 `archive/project-management/`
 
@@ -37,4 +37,4 @@
 
 ---
 
-> 📅 最後同步：2026年3月13日
+> 📅 最後同步：2026年3月16日
