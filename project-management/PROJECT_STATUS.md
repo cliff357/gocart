@@ -275,7 +275,6 @@ API 層包裝，為未來 REST API 做準備
 | `AdminNavbar` | 管理員導航 |
 | `AdminSidebar` | 側邊欄選單 |
 | `OrdersAreaChart` | 訂單圖表 |
-| `LoginButton` | 登入按鈕 |
 
 ### 開發組件
 | 組件 | 功能 |

@@ -1,7 +1,7 @@
 # 🧪 LoyaultyClub 測試文檔
 
 > 📅 創建日期：2026年2月5日  
-> 📅 最後更新：2026年3月3日  
+> 📅 最後更新：2026年3月13日  
 > 👤 負責人：SA Team  
 > 📦 項目：LoyaultyClub (老友賣蘿柚企劃)
 
@@ -18,7 +18,7 @@
 |------|------|------|
 | Next.js | 16.1.6 | 前端框架（App Router） |
 | React | 19.x | UI 組件 |
-| Redux Toolkit | 2.8.x | 狀態管理（3 slices：cart、product、address） |
+| Redux Toolkit | 2.8.x | 狀態管理（1 slice：product） |
 | Firebase | 12.x | Auth、Firestore、Storage |
 | Tailwind CSS | 4.x | 樣式 |
 | Jest | 30.x | 單元 / 整合測試 |
@@ -53,7 +53,7 @@ feature/* ──→ dev ──→ main
       ╱──────────╲
      ╱    P2      ╲   Redux Slice / State          — 11 tests
     ╱──────────────╲
-   ╱      P1        ╲  UI 組件渲染 + 交互          — 55 tests
+   ╱      P1        ╲  UI 組件渲染 + 交互          — 71 tests
   ╱──────────────────╲
  ╱   P0 (Emulator)    ╲ Security Rules + CRUD      — 52 tests
 ╱────────────────────────╲
@@ -306,6 +306,17 @@ npm run test:all            # Jest + Emulator
 | 3/9 | 🗑️ 移除 Coupon 全條鏈 — 頁面/ApiService/FirestoreService/Rules/Tests (-4 Jest, -2 emulator) (99 Jest + 56 Emulator + 52 E2E = **207 tests**) | ✅ |
 | 3/9 | 🗑️ 移除 Carts CRUD tests — 購物車停用 (-2 emulator tests) (99 Jest + 54 Emulator + 52 E2E = **205 tests**) | ✅ |
 | 3/9 | 🗑️ 移除 Addresses CRUD tests — 地址功能已刪 (-2 emulator tests) (99 Jest + 52 Emulator + 52 E2E = **203 tests**) | ✅ |
+| 3/12 | 🗑️ 移除 ThemeSwitcherExample.jsx — AI over-scaffolding demo，零 import | ✅ |
+| 3/12 | 🗑️ 移除 Logo.examples.js — dead demo file，零 import | ✅ |
+| 3/12 | 🗑️ 移除 LoginButton.jsx — 零頁面 import，admin 有獨立登入邏輯 | ✅ |
+| 3/12 | 📋 完成 83 項 dead code 全面審計（#1–#83），清理 8 個 dead items | ✅ |
+| 3/12 | 🔐 開始 Admin 頁面測試計劃 — 審計 12 頁面 + 4 組件，全部 0 測試 | 🔄 |
+| 3/12 | ✅ Phase 1: Admin 組件測試 — AdminSidebar/Navbar/Layout/OrdersAreaChart (+16 tests) (115 Jest + 52 Emulator + 52 E2E = **219 tests**) | ✅ |
+| 3/13 | 📋 Phase 2 計劃：分析 12 頁面依賴，分 4 種 mock 模式，規劃 3 個測試文件 (~51 tests) | ✅ |
+| 3/13 | 📄 建立 `project-management/ADMIN_TESTING_PLAN.md` — Phase 2 詳細記錄 | ✅ |
+| 3/16 | ✅ Phase 2 文件 1: `admin-pages-auth.test.jsx` — Login + Dashboard (+11 tests) (126 Jest + 52 Emulator + 52 E2E = **230 tests**) | ✅ |
+| 3/16 | ✅ Phase 2 文件 2: `admin-pages-crud.test.jsx` — Categories/Reservations/Todo/About Setting (+24 tests) (150 Jest + 52 Emulator + 52 E2E = **254 tests**) | ✅ |
+| 3/16 | ✅ Phase 2 文件 3: `admin-pages-complex.test.jsx` — Products×3/HomeSetting/Admins/Notifications (+33 tests) (183 Jest + 52 Emulator + 52 E2E = **287 tests**) 🎉 Phase 2 完成！ | ✅ |
 
 ---
 
@@ -317,6 +328,10 @@ __tests__/
 │   ├── admin.test.js                # P3: 12 個 Admin API 認證測試
 │   └── notifications.test.js        # P3: 9 個通知 API 測試
 ├── components/
+│   ├── admin-components.test.jsx    # P1: 16 個 Admin 組件測試 (Sidebar/Navbar/Layout/Chart)
+│   ├── admin-pages-auth.test.jsx    # P2-F1: 11 個 Admin 頁面測試 (Login/Dashboard)
+│   ├── admin-pages-crud.test.jsx    # P2-F2: 24 個 Admin 頁面測試 (Categories/Reservations/Todo/About)
+│   ├── admin-pages-complex.test.jsx # P2-F3: 33 個 Admin 頁面測試 (Products×3/HomeSetting/Admins/Notifications)
 │   ├── Loading.test.jsx             # P1: 2 個 Loading 組件測試
 │   ├── modals.test.jsx              # P1: 20 個彈窗組件測試 (預約/地址)
 │   ├── ui-components.test.jsx       # P1: 9 個基礎組件測試 (Title + Logo)
@@ -339,15 +354,16 @@ e2e/
 
 | 類型 | 框架 | 數量 | 運行時間 |
 |------|------|------|----------|
-| UI 組件 (P1) | Jest + Testing Library | 105 | ~0.4s |
-| Redux Slice (P2) | Jest | 23 | ~0.1s |
-| API Service + Admin + Notification (P3) | Jest + Fake Timers | 44 | ~0.2s |
+| UI 組件 + Admin 組件 (P1) | Jest + Testing Library | 121 | ~0.5s |
+| Admin 頁面 (Phase 2)      | Jest + Testing Library | 68  | ~0.8s |
+| Redux Slice (P2) | Jest | 11 | ~0.1s |
+| API Service + Admin + Notification (P3) | Jest + Fake Timers | 33 | ~0.2s |
 | Security Rules | Jest + Firebase Emulator | 51 | ~2s |
 | CRUD 操作 | Jest + Firebase Emulator | 21 | ~1s |
 | E2E (P4) | Playwright + Chromium | 52 | ~15s |
-| **總計** | | **300** | |
+| **總計** | | **357** |
 
-> 💡 Jest 測試（132 個）在 0.9 秒內完成！
+> 💡 Jest 測試（183 個 × 13 suites）在 ~1.5 秒內完成！
 
 ---
 
@@ -842,6 +858,126 @@ Push 到 GitHub 後會自動：
 | 🟢 低 | 登入 / 下單 E2E 流程 | 模擬完整用戶購物旅程 |
 | 🟢 低 | 視覺回歸測試 | Playwright screenshot comparison |
 | 🟢 低 | 性能測試 | Lighthouse CI |
+
+---
+
+## 🔐 Admin 頁面測試計劃
+
+> 📅 創建日期：2026年3月12日
+> 📋 來源：83 項 dead code 審計完成後，發現 admin 區域測試覆蓋為零
+
+### 現狀審計
+
+**12 個 Admin 頁面 — 全部 0 測試：**
+
+| # | 頁面 | 路徑 | 行數 | Jest | E2E |
+|---|------|------|------|------|-----|
+| 1 | Dashboard | `/admin` | ~120 | ❌ | ❌ |
+| 2 | Add Product | `/admin/products` | 598 | ❌ | ❌ |
+| 3 | Products List | `/admin/products/list` | 266 | ❌ | ❌ |
+| 4 | Edit Product | `/admin/products/edit/[id]` | 695 | ❌ | ❌ |
+| 5 | Categories | `/admin/categories` | 179 | ❌ | ❌ |
+| 6 | Reservations | `/admin/reservations` | 285 | ❌ | ❌ |
+| 7 | Home Setting | `/admin/home-setting` | 500 | ❌ | ❌ |
+| 8 | About Setting | `/admin/about-setting` | 436 | ❌ | ❌ |
+| 9 | Manage Admins | `/admin/admins` | 329 | ❌ | ❌ |
+| 10 | Notifications | `/admin/notifications` | 318 | ❌ | ❌ |
+| 11 | Todo | `/admin/todo` | 500 | ❌ | ❌ |
+| 12 | Login | `/admin/login` | 94 | ❌ | ❌ |
+
+**4 個 Admin 組件 — 全部 0 測試：**
+
+| # | 組件 | 用途 | Jest |
+|---|------|------|------|
+| A | AdminSidebar | 側邊欄 10 個連結 | ❌ |
+| B | AdminNavbar | 用戶名 + 登出按鈕 | ❌ |
+| C | AdminLayout | 包裹 Sidebar + Navbar + children | ❌ |
+| D | OrdersAreaChart | 訂單趨勢圖表 | ❌ |
+
+**已有測試（API Routes）：**
+- ✅ `/api/admin/invite` — 7 tests（admin.test.js）
+- ✅ `/api/admin/remote-config` — 4 tests（admin.test.js）
+- ✅ `/api/notifications/*` — 9 tests（notifications.test.js）
+
+### 測試計劃
+
+**Phase 1: Admin 組件（Jest + RTL）**
+
+| 組件 | 預計 | 測試內容 | 狀態 |
+|------|------|---------|------|
+| AdminSidebar | 5 | 渲染 10 個連結、href 正確、active state、品牌名 | ✅ |
+| AdminNavbar | 5 | Logo、用戶名顯示、登出按鈕、陶豬管理員 badge | ✅ |
+| AdminLayout | 3 | 渲染 Sidebar + Navbar + children、loading state | ✅ |
+| OrdersAreaChart | 3 | 圖表標題、空數據、日期分組 | ✅ |
+
+**Phase 2: Admin 頁面（Jest + RTL, mock Firebase）— 3 個文件，按複雜度分層**
+
+> 📄 詳細記錄：`project-management/ADMIN_TESTING_PLAN.md`
+
+**文件 1：`admin-pages-auth.test.jsx`（Mock 模式 A：Auth + API）**
+
+| 頁面 | 預計 | 測試內容 | 狀態 |
+|------|------|---------|------|
+| Login (94行)       | ~4 | Google 登入按鈕渲染、loading spinner、已登入自動 redirect、登入失敗 toast | ✅ |
+| Dashboard (120行)  | ~4 | 3 張統計卡片、OrdersAreaChart 渲染、loading state、非 admin redirect | ✅ |
+
+**文件 2：`admin-pages-crud.test.jsx`（Mock 模式 B/C：FirebaseFirestoreService / FirestoreService）**
+
+| 頁面 | 預計 | 測試內容 | 狀態 |
+|------|------|---------|------|
+| Categories (179行) | ~5 | 分類列表渲染、新增表單提交、編輯切換、刪除確認、父分類 select | ✅ |
+| Reservations (285行) | ~5 | 預訂列表、狀態篩選 (4種)、狀態更新 dropdown、日期格式化、loading | ✅ |
+| Todo (500行) | ~4 | 任務列表渲染、新增任務、完成切換、分類 + 優先級標籤 | ✅ |
+| About Setting (436行) | ~4 | 時間線列表、新增項目、編輯表單、上下移動順序 | ✅ |
+
+**文件 3：`admin-pages-complex.test.jsx`（Mock 模式 D：複合型 — Firestore + Storage + Redux）**
+
+| 頁面 | 預計 | 測試內容 | 狀態 |
+|------|------|---------|------|
+| Products List (266行) | 6 | 產品表格渲染、分類篩選、產品計數、loading spinner、新增產品 link、非 admin redirect | ✅ |
+| Add Product (598行) | 6 | 表單欄位渲染、提交/取消按鈕、暢銷 checkbox、圖片驗證錯誤、非 admin redirect、auth loading | ✅ |
+| Edit Product (695行) | 4 | 載入現有資料填入表單、loading state、非 admin redirect、產品不存在 redirect | ✅ |
+| Home Setting (500行) | 4 | 頁面標題+儲存按鈕、Banner+About sections、即時預覽、Firestore 載入 | ✅ |
+| Manage Admins (329行) | 7 | 標題+邀請表單、Admin 列表、"you" badge、auth loading、空 email 錯誤、重複 admin 錯誤、how-to section | ✅ |
+| Notifications (318行) | 6 | 標題+設定區塊、email sections、enable/disable toggle、測試區塊、已載入 emails、環境資訊 | ✅ |
+
+### 技術方案
+
+所有 Admin 頁面都是 `'use client'`，Mock 按 4 種模式分類：
+
+| Mock 模式 | 頁面 | 核心依賴 |
+|-----------|------|----------|
+| **A. Auth + API** | Login, Dashboard | `useAuth`, `AuthService`, `ApiService` |
+| **B. FirebaseFirestoreService** | Reservations, Todo, About Setting | `FirebaseFirestoreService` static methods |
+| **C. FirestoreService instances** | Categories | `categoryService` instance methods |
+| **D. 複合型** | Products ×3, Home Setting, Admins, Notifications | Firestore + Storage + Redux + 直接 Firebase SDK |
+
+**共用 Mock（所有文件）：**
+- `next/navigation` → 已在 jest.setup.js 全局 mock
+- `react-hot-toast` → `jest.fn()`
+- `useAuth()` → `{ isAdmin: true, user: mockAdminUser }`
+
+**模式 B/C 額外 Mock：**
+- `FirebaseFirestoreService` → `getDocument` / `getCollection` / `updateDocument` / `setDocument`
+- `categoryService` → `getAll` / `create` / `update` / `delete`
+
+**模式 D 額外 Mock：**
+- `FirebaseStorageService.uploadFile` → resolved `{ success, url }`
+- `firebase/storage` → `ref` / `uploadBytes` / `getDownloadURL`
+- `firebase/firestore` → `doc` / `getDoc` / `setDoc` / `deleteDoc` / `collection` / `query` / `getDocs`
+- `@/lib/firebase/config` → `{ db: {}, storage: {} }`
+- `react-redux` → `useDispatch`
+- `productSlice` → `fetchProducts`
+
+### Phase 2 最終成果 ✅
+
+| 指標 | 開始前 | 完成後 |
+|------|--------|--------|
+| Admin 頁面覆蓋 | 0/12 | **12/12** ✅ |
+| 新增測試文件 | 0 | **3** |
+| 新增測試數量 | 0 | **68** |
+| Jest 總數 | 99 | **183** |
+| 全部測試總數 | 203 | **287** |
 
 ---
 
