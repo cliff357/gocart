@@ -1,7 +1,7 @@
 # 🧪 LoyaultyClub 測試文檔
 
 > 📅 創建日期：2026年2月5日  
-> 📅 最後更新：2026年3月16日  
+> 📅 最後更新：2026年3月18日  
 > 👤 負責人：SA Team  
 > 📦 項目：LoyaultyClub (老友賣蘿柚企劃)
 
@@ -53,7 +53,7 @@ feature/* ──→ dev ──→ main
       ╱──────────╲
      ╱    P2      ╲   Redux Slice / State          — 11 tests
     ╱──────────────╲
-   ╱      P1        ╲  UI 組件 + 頁面渲染 + 交互   — 149 tests
+   ╱      P1        ╲  UI 組件 + 頁面渲染 + 交互   — 161 tests
   ╱──────────────────╲
  ╱   P0 (Emulator)    ╲ Security Rules + CRUD      — 52 tests
 ╱────────────────────────╲
@@ -193,10 +193,10 @@ const runWithTimers = async (promise) => {
 
 ```bash
 # 日常開發（最常用，~0.9s）
-npm test                    # 運行所有 Jest 測試（193 tests）
+npm test                    # 運行所有 Jest 測試（205 tests）
 
 # 只跑組件測試
-npm run test:components     # 只跑 __tests__/components/（148 tests）
+npm run test:components     # 只跑 __tests__/components/（160 tests）
 
 # Redux + API Service 測試
 npx jest --testPathPatterns=lib   # 只跑 __tests__/lib/（23 tests）
@@ -215,7 +215,7 @@ npm run test:all            # Jest + Emulator
 ### 九、CI/CD 規則
 
 - GitHub Actions 在每次 push 自動運行（`.github/workflows/test.yml`）
-- CI 跑的測試：Jest 193 tests + Emulator 52 tests
+- CI 跑的測試：Jest 205 tests + Emulator 52 tests
 - E2E 目前只在本地跑（後續可加入 CI）
 - **所有測試通過才能 merge PR**
 
@@ -319,6 +319,8 @@ npm run test:all            # Jest + Emulator
 | 3/16 | ✅ Phase 2 文件 3: `admin-pages-complex.test.jsx` — Products×3/HomeSetting/Admins/Notifications (+33 tests) (183 Jest + 52 Emulator + 52 E2E = **287 tests**) 🎉 Phase 2 完成！ | ✅ |
 | 3/16 | 🔍 全站測試覆蓋審計 — 審計 23 頁面 + 17 組件 + 15 lib 文件，識別 3 個主要 Gap（ProductDetails/Shop/About） | ✅ |
 | 3/16 | ✅ Phase 3 Gap #1: `ProductDetails.test.jsx` — 圖片畫廊/折扣計算/選項選擇/相關產品/Reserve (+10 tests) (193 Jest + 52 Emulator + 52 E2E = **297 tests**) | ✅ |
+| 3/17 | ✅ Phase 3 Gap #2: `ShopPage.test.jsx` — 商品列表/搜索篩選/分類篩選/分類名載入/空狀態 (+6 tests) (199 Jest + 52 Emulator + 52 E2E = **303 tests**) | ✅ |
+| 3/18 | ✅ Phase 3 Gap #3: `AboutPage.test.jsx` — Hero/Timeline預設/Firestore載入/fallback/內容區/結尾 (+6 tests) (205 Jest + 52 Emulator + 52 E2E = **309 tests**) | ✅ |
 
 ---
 
@@ -337,6 +339,8 @@ __tests__/
 │   ├── Loading.test.jsx             # P1: 2 個 Loading 組件測試
 │   ├── modals.test.jsx              # P1: 14 個預約彈窗測試 (ReservationModal)
 │   ├── ProductDetails.test.jsx      # P3-Gap1: 10 個產品詳情測試 (畫廊/折扣/選項/相關/Reserve)
+│   ├── ShopPage.test.jsx            # P3-Gap2: 6 個商品列表測試 (搜索/分類篩選/分類名載入)
+│   ├── AboutPage.test.jsx           # P3-Gap3: 6 個 About 頁面測試 (Hero/Timeline/Firestore/fallback)
 │   ├── ui-components.test.jsx       # P1: 9 個基礎組件測試 (Title + Logo)
 │   ├── ui-components-p1.test.jsx    # P1: 18 個進階組件測試 (Navbar/Footer/Hero)
 │   └── ui-components-p2.test.jsx    # P1: 12 個內容組件測試 (LatestProducts/AboutSection)
@@ -359,15 +363,15 @@ e2e/
 |------|------|------|----------|
 | UI 組件 + Admin 組件 (P1) | Jest + Testing Library | 71 | ~0.3s |
 | Admin 頁面 (Phase 2)      | Jest + Testing Library | 68  | ~0.8s |
-| Public 組件 (Phase 3)     | Jest + Testing Library | 10  | ~0.5s |
+| Public 組件 (Phase 3)     | Jest + Testing Library | 22  | ~0.5s |
 | Redux Slice (P2) | Jest | 11 | ~0.1s |
 | API Service + Admin + Notification (P3) | Jest + Fake Timers | 33 | ~0.2s |
 | Security Rules | Jest + Firebase Emulator | 40 | ~2s |
 | CRUD 操作 | Jest + Firebase Emulator | 12 | ~1s |
 | E2E (P4) | Playwright + Chromium | 52 | ~15s |
-| **總計** | | **297** |
+| **總計** | | **309** |
 
-> 💡 Jest 測試（193 個 × 14 suites）在 ~2.2 秒內完成！
+> 💡 Jest 測試（205 個 × 16 suites）在 ~1.8 秒內完成！
 
 ---
 
@@ -626,6 +630,34 @@ e2e/
 
 ---
 
+### 4e. Phase 3 商店頁面測試 (ShopPage.test.jsx)
+
+> 🆕 **3月17日新增**：Phase 3 Gap #2 — 核心購物頁面，78 行，Redux useSelector + 搜索/分類篩選
+
+#### ShopPage (6 tests)
+- 顯示 "All Products" 標題 + 完整商品列表
+- `?search=green` → 只顯示名稱匹配的商品
+- 搜索模式 → 顯示返回箭頭圖標
+- `?category=cat-accessories` → categoryService 載入分類名
+- 分類名載入失敗 → 顯示 fallback category ID
+- 空商品狀態 → 顯示提示訊息
+
+---
+
+### 4f. Phase 3 About 頁面測試 (AboutPage.test.jsx)
+
+> 🆕 **3月18日新增**：Phase 3 Gap #3 — Firestore 動態 timeline 載入，192 行，IntersectionObserver 動畫
+
+#### AboutPage (6 tests)
+- Hero 渲染 — 標題「老友賣蘿柚企劃」+ 副標題
+- 預設 Timeline — 4 項全部顯示（日期 + 標題 + icon）
+- Firestore 成功載入 — 自定義 timeline 覆蓋預設
+- Firestore 失敗 — fallback 保留 DEFAULT_TIMELINE
+- 「關於我哋」內容區 — 三段文字
+- 結尾提示 — 「更多故事，陸續更新...」
+
+---
+
 ### 5. P2 Redux Slice 測試 (redux-slices.test.js)
 
 測試 productSlice 的 reducer 邏輯。
@@ -805,7 +837,7 @@ e2e/
 ### 本地運行
 
 ```bash
-# 運行所有 Jest 測試（193 tests，~2.2s）
+# 運行所有 Jest 測試（205 tests，~1.8s）
 npm test
 
 # 運行 Emulator 測試（52 tests，~3s）
@@ -824,7 +856,7 @@ npm run test:all
 ### CI/CD 自動運行
 
 Push 到 GitHub 後會自動：
-1. 運行 193 個 Jest 測試（組件 + Redux + API + Admin + Notification + ProductDetails）
+1. 運行 205 個 Jest 測試（組件 + Redux + API + Admin + Notification + Public）
 2. 啟動 Firebase Emulator
 3. 運行 52 個 Emulator 測試
 4. 回報結果
@@ -878,8 +910,8 @@ Push 到 GitHub 後會自動：
 | ~~🔴 高~~ | ~~真實 API 替換 MockData~~ | ✅ 已完成 — ApiService 已改用 FirestoreService（2/26 merge） |
 | ~~🔴 高~~ | ~~About / Contact 頁面~~ | ✅ 路由已建好 + E2E 已覆蓋（3/16 審計確認） |
 | ~~🔴 高~~ | ~~`ProductDetails.jsx` Jest 測試~~ | ✅ 完成 (3/16) — 10 tests 覆蓋畫廊/折扣/選項/相關產品/Reserve |
-| 🟡 中 | `Shop` 頁面 Jest 測試 | **78 行** — Redux useSelector + 搜索/分類篩選 + categoryService（建議 ~5-6 tests） |
-| 🟡 中 | `About` 頁面 Jest 測試 | **191 行** — Firestore timeline 載入 + IntersectionObserver 動畫 + DEFAULT_TIMELINE fallback（建議 ~4-5 tests） |
+| ~~🟡 中~~ | ~~`Shop` 頁面 Jest 測試~~ | ✅ 完成 (3/17) — 6 tests 覆蓋搜索/分類篩選/分類名載入/空狀態 |
+| ~~🟡 中~~ | ~~`About` 頁面 Jest 測試~~ | ✅ 完成 (3/18) — 6 tests 覆蓋 Hero/Timeline 預設+動態/Firestore fallback/內容區 |
 | 🟡 中 | CI/CD E2E 集成 | 在 GitHub Actions 加入 Playwright 測試 |
 | 🟡 中 | 覆蓋率報告 | 啟用 Jest coverage threshold（目標 60%+） |
 | 🟢 低 | 登入 / 下單 E2E 流程 | 模擬完整用戶購物旅程 |
@@ -1021,7 +1053,7 @@ Push 到 GitHub 後會自動：
 | 類別 | 總數 | 已測試 | 覆蓋率 | 備註 |
 |------|------|--------|--------|------|
 | Admin 頁面 | 12 | 12 | **100%** ✅ | Phase 1+2 完成 |
-| Public 頁面 | 11 | 9（E2E） | **82%** | Shop/About 只有基本 E2E render |
+| Public 頁面 | 11 | 11（E2E + Shop/About Jest） | **100%** ✅ | 全部頁面已覆蓋 |
 | 組件 | 17 | 15 | **88%** | ~~ProductDetails~~ ✅ / ColorSwitcher/FirebaseStatus 未測 |
 | API 路由 | 4 | 4 | **100%** ✅ | admin + notifications |
 | Services/Lib | 15 | 11（6 直測 + 5 mock） | **~73%** | appCheck/colors/themes/store 未測 |
@@ -1031,8 +1063,8 @@ Push 到 GitHub 後會自動：
 | 優先 | 組件/頁面 | 行數 | 現有覆蓋 | Gap 描述 | 建議測試 |
 |------|-----------|------|----------|----------|----------|
 | ~~🔴~~ | ~~`ProductDetails.jsx`~~ | ~~259~~ | ✅ **10 Jest** | ~~圖片畫廊、折扣計算、選項選擇、Reserve、相關產品~~ | ✅ 完成 (3/16) |
-| 🟡 | `(public)/shop/page.jsx` | 78 | E2E 基本 render | Redux `useSelector` 商品列表、`useSearchParams` 搜索/分類 URL 參數、`categoryService.getById` 分類名載入、篩選後 `ProductCard` 渲染 | ~5-6 Jest |
-| 🟡 | `(public)/about/page.jsx` | 191 | E2E 基本 render | `FirebaseFirestoreService.getDocument('settings','about')` timeline 載入、`IntersectionObserver` 滾動動畫（`TimelineItem` 子組件）、`DEFAULT_TIMELINE` fallback、hero + timeline + about 三段式 | ~4-5 Jest |
+| ~~🟡~~ | ~~`(public)/shop/page.jsx`~~ | ~~78~~ | ✅ **6 Jest** | ~~Redux useSelector、搜索/分類篩選、categoryService~~ | ✅ 完成 (3/17) |
+| ~~🟡~~ | ~~`(public)/about/page.jsx`~~ | ~~191~~ | ✅ **6 Jest** | ~~Firestore timeline 載入、IntersectionObserver、DEFAULT_TIMELINE fallback~~ | ✅ 完成 (3/18) |
 | 🟢 | `ColorSwitcher.jsx` | 282 | 零 | Remote Config API + localStorage + CSS 變數切換。Debug 工具，非用戶面向 | 低優先 |
 | 🟢 | `FirebaseStatus.jsx` | 138 | 零 | Dev-only 狀態指示器，production 返回 `null` | 低優先 |
 
@@ -1054,8 +1086,8 @@ Push 到 GitHub 後會自動：
 ### 下一步行動
 
 1. ~~**🔴 ProductDetails 測試**~~ ✅ 完成 (3/16) — 10 tests，覆蓋全部 6 功能區
-2. **🟡 Shop 頁面測試** — 搜索/篩選是核心購物功能
-3. **🟡 About 頁面測試** — Firestore 動態載入 + fallback 邏輯
+2. ~~**🟡 Shop 頁面測試**~~ ✅ 完成 (3/17) — 6 tests，搜索/分類篩選/空狀態
+3. ~~**🟡 About 頁面測試**~~ ✅ 完成 (3/18) — 6 tests，Hero/Timeline/Firestore/fallback
 4. **🗑️ 清理 MockData.js** — 656 行 dead code
 5. **🟡 CI/CD + 覆蓋率報告**
 
