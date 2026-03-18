@@ -60,6 +60,8 @@ jobs:
       - name: 🧪 Run tests with coverage
         run: npm run test:ci
         env:
+          # CI 記憶體限制 — 防止 OOM (ui-components-p1 會拉入 Firebase SDK)
+          NODE_OPTIONS: '--unhandled-rejections=none --max-old-space-size=4096'
           # 測試用的環境變數 (非真實值)
           RESEND_API_KEY: test_key
           NEXT_PUBLIC_SITE_URL: https://test.loyaultyclub.com

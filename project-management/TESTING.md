@@ -235,6 +235,7 @@ npm run test:all            # Jest + Emulator
 | Next.js 16 `RangeError: Maximum call stack size exceeded` | 全部測試一起跑時 `unhandled-rejection.tsx` 會觸發遞歸。使用 `--forceExit` 或分開跑各 suite |
 | ApiService mock Firestore | API Service 已改用 FirestoreService，測試需要 `jest.mock('@/lib/services/FirestoreService')` 提供 mock 數據 |
 | Firebase config 在測試 OOM | P1 組件測試需要 mock `@/lib/firebase/firestore` 避免 Firebase SDK 初始化導致記憶體溢出 |
+| CI runner OOM (`ui-components-p1`) | GitHub Actions 記憶體有限（~7GB），並行跑 16 suites 會 OOM。解法：`--max-old-space-size=4096` + `--maxWorkers=2` |
 
 ---
 
@@ -324,6 +325,7 @@ npm run test:all            # Jest + Emulator
 | 3/18 | ✅ Phase 3 Gap #3: `AboutPage.test.jsx` — Hero/Timeline預設/Firestore載入/fallback/內容區/結尾 (+6 tests) (205 Jest + 52 Emulator + 52 E2E = **309 tests**) | ✅ |
 | 3/18 | 🗑️ 刪除 `lib/data/MockData.js` (656 行 dead code) — `MockMiscData.getCategories()` inline 入 `ApiService.js`，移除空 `lib/data/` 目錄 | ✅ |
 | 3/18 | 🔧 CI/CD 覆蓋率：啟用 `coverageThreshold` (30% stmts/lines, 25% branches/funcs)，排除 Firebase SDK wrappers，`test.yml` 改跑全部 205 Jest，`ci.yml` 擴展觸發 dev branch | ✅ |
+| 3/18 | 🐛 修復 CI OOM：`ui-components-p1` 在 GitHub Actions 記憶體不足崩潰 — 加 `--max-old-space-size=4096` + `--maxWorkers=2` | ✅ |
 
 ---
 
@@ -726,8 +728,9 @@ e2e/
 |---|------|------|------|
 | 1 | `jest.config.js` | ✏️ 修改 | 排除 `lib/firebase/**`、`lib/config/colors.js`、`lib/config/themes.js`、`lib/store.js` 出覆蓋率統計 |
 | 2 | `jest.config.js` | ✏️ 修改 | 啟用 `coverageThreshold`：statements/lines ≥ 30%, branches/functions ≥ 25% |
-| 3 | `.github/workflows/test.yml` | ✏️ 修改 | `npm run test:components` → `npm test`（跑全部 205 Jest），加測試用環境變數 |
-| 4 | `.github/workflows/ci.yml` | ✏️ 修改 | 觸發條件從 `[main]` 擴展到 `[main, dev]` |
+| 3 | `.github/workflows/test.yml` | ✏️ 修改 | `npm test` → `npm run test:ci`（跑全部 205 Jest + `--maxWorkers=2`），加 `--max-old-space-size=4096` 防 OOM |
+| 4 | `.github/workflows/ci.yml` | ✏️ 修改 | 觸發條件從 `[main]` 擴展到 `[main, dev]`，加 `NODE_OPTIONS` 防 OOM |
+| 5 | `package.json` | ✏️ 修改 | `test:ci` 加 `--max-old-space-size=4096` |
 
 #### 修正前後對比
 

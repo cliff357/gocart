@@ -51,9 +51,9 @@ jobs:
 
       # 6. 運行所有 Jest 測試（205 tests × 16 suites，含 components + lib）
       - name: Run All Jest Tests
-        run: npm test
+        run: npm run test:ci
         env:
-          NODE_OPTIONS: '--unhandled-rejections=none'
+          NODE_OPTIONS: '--unhandled-rejections=none --max-old-space-size=4096'
           RESEND_API_KEY: test_key
           NEXT_PUBLIC_SITE_URL: https://test.loyaultyclub.com
           NEXT_PUBLIC_FIREBASE_API_KEY: test_api_key

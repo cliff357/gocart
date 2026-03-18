@@ -10,7 +10,7 @@
     "test": "NODE_OPTIONS='--unhandled-rejections=none' jest",
     "test:watch": "NODE_OPTIONS='--unhandled-rejections=none' jest --watch",
     "test:coverage": "NODE_OPTIONS='--unhandled-rejections=none' jest --coverage",
-    "test:ci": "NODE_OPTIONS='--unhandled-rejections=none' jest --ci --coverage --maxWorkers=2",
+    "test:ci": "NODE_OPTIONS='--unhandled-rejections=none --max-old-space-size=4096' jest --ci --coverage --maxWorkers=2",
     "test:components": "NODE_OPTIONS='--unhandled-rejections=none' jest --testPathPatterns=components",
     "test:emulator": "firebase emulators:exec --only firestore,auth,storage 'npx jest --config jest.emulator.config.js'",
     "test:all": "NODE_OPTIONS='--unhandled-rejections=none' jest && npm run test:emulator",
