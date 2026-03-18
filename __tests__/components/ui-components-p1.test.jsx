@@ -48,32 +48,6 @@ jest.mock('react-hot-toast', () => ({
     success: jest.fn(),
 }));
 
-jest.mock('@/lib/data/MockData', () => ({
-    MockMiscData: {
-        getCategories: () => ['Headphones', 'Speakers', 'Watch', 'Earbuds'],
-        getOurSpecs: () => [
-            {
-                title: 'Free Shipping',
-                description: 'Enjoy fast, free delivery',
-                icon: () => <span data-testid="spec-icon">icon</span>,
-                accent: '#05DF72',
-            },
-            {
-                title: '7 Days easy Return',
-                description: 'Return any item within 7 days',
-                icon: () => <span data-testid="spec-icon">icon</span>,
-                accent: '#FF8904',
-            },
-            {
-                title: '24/7 Customer Support',
-                description: 'Get expert help',
-                icon: () => <span data-testid="spec-icon">icon</span>,
-                accent: '#A684FF',
-            },
-        ],
-    },
-}));
-
 // ============================================
 // Import Components (after mocks)
 // ============================================

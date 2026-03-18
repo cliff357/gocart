@@ -61,20 +61,29 @@ const customJestConfig = {
         'lib/**/*.{js,jsx}',
         '!**/*.d.ts',
         '!**/node_modules/**',
+        // 排除 Firebase SDK wrappers — 呢啲文件用 Emulator 測試覆蓋，唔適合 unit test mock
+        '!lib/firebase/**',
+        // 排除靜態配置文件 — 無業務邏輯
+        '!lib/config/colors.js',
+        '!lib/config/themes.js',
+        // 排除 Redux store 設定 — 組件測試間接覆蓋
+        '!lib/store.js',
     ],
     
     // 設置測試前的全局配置
     setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
     
-    // 覆蓋率閾值 (可選，之後可以逐步提高)
-    // coverageThreshold: {
-    //     global: {
-    //         branches: 50,
-    //         functions: 50,
-    //         lines: 50,
-    //         statements: 50,
-    //     },
-    // },
+    // 覆蓋率閾值 — 防止覆蓋率倒退
+    // 排除 Firebase SDK wrappers 後，真實覆蓋率約 45-50%
+    // 設 30% 作為底線，後續可逐步提高
+    coverageThreshold: {
+        global: {
+            branches: 25,
+            functions: 25,
+            lines: 30,
+            statements: 30,
+        },
+    },
 }
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
