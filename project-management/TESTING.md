@@ -1,7 +1,7 @@
 # 🧪 LoyaultyClub 測試文檔
 
 > 📅 創建日期：2026年2月5日  
-> 📅 最後更新：2026年3月18日  
+> 📅 最後更新：2026年3月24日  
 > 👤 負責人：SA Team  
 > 📦 項目：LoyaultyClub (老友賣蘿柚企劃)
 
@@ -235,7 +235,7 @@ npm run test:all            # Jest + Emulator
 | Next.js 16 `RangeError: Maximum call stack size exceeded` | 全部測試一起跑時 `unhandled-rejection.tsx` 會觸發遞歸。使用 `--forceExit` 或分開跑各 suite |
 | ApiService mock Firestore | API Service 已改用 FirestoreService，測試需要 `jest.mock('@/lib/services/FirestoreService')` 提供 mock 數據 |
 | Firebase config 在測試 OOM | P1 組件測試需要 mock `@/lib/firebase/firestore` 避免 Firebase SDK 初始化導致記憶體溢出 |
-| CI runner OOM (`ui-components-p1`) | GitHub Actions 記憶體有限（~7GB），並行跑 16 suites 會 OOM。解法：`--max-old-space-size=4096` + `--maxWorkers=2` |
+| CI runner OOM (`ui-components-p1`) | GitHub Actions 記憶體有限（~7GB）。解法：`--maxWorkers=1` + `--max-old-space-size=4096` + `--forceExit`。`test.yml` 唔跑 `--coverage`（留俾 `ci.yml`） |
 
 ---
 
@@ -326,6 +326,9 @@ npm run test:all            # Jest + Emulator
 | 3/18 | 🗑️ 刪除 `lib/data/MockData.js` (656 行 dead code) — `MockMiscData.getCategories()` inline 入 `ApiService.js`，移除空 `lib/data/` 目錄 | ✅ |
 | 3/18 | 🔧 CI/CD 覆蓋率：啟用 `coverageThreshold` (30% stmts/lines, 25% branches/funcs)，排除 Firebase SDK wrappers，`test.yml` 改跑全部 205 Jest，`ci.yml` 擴展觸發 dev branch | ✅ |
 | 3/18 | 🐛 修復 CI OOM：`ui-components-p1` 在 GitHub Actions 記憶體不足崩潰 — 加 `--max-old-space-size=4096` + `--maxWorkers=2` | ✅ |
+| 3/19 | 🐛 修復 CI OOM (2nd)：去除 `--coverage`（test.yml 不需要 coverage）| ✅ |
+| 3/24 | 🐛 修復 CI OOM (3rd) + Lint：`--maxWorkers=1` + `--forceExit`，skip `next lint`（Next.js 16 已移除）| ✅ |
+| 3/24 | ✅ CI 全部通過 — `test.yml` + `ci.yml` 兩個 workflow 綠燈，PR ready to merge | ✅ |
 
 ---
 
