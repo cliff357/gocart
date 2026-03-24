@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "echo 'next lint removed in Next.js 16 — ESLint not yet configured'",
     "test": "NODE_OPTIONS='--unhandled-rejections=none' jest",
     "test:watch": "NODE_OPTIONS='--unhandled-rejections=none' jest --watch",
     "test:coverage": "NODE_OPTIONS='--unhandled-rejections=none' jest --coverage",
