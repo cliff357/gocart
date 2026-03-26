@@ -52,6 +52,13 @@ export default function EditProductPage() {
     const [newOptionName, setNewOptionName] = useState('');
     const [newOptionValues, setNewOptionValues] = useState('');
 
+    // Load product and categories
+    useEffect(() => {
+        if (productId) {
+            loadData();
+        }
+    }, [productId]);
+
     // Redirect if not admin
     if (!loading && !isAdmin) {
         router.push('/');
@@ -66,13 +73,6 @@ export default function EditProductPage() {
             </div>
         );
     }
-
-    // Load product and categories
-    useEffect(() => {
-        if (productId) {
-            loadData();
-        }
-    }, [productId]);
 
     const loadData = async () => {
         try {
@@ -189,7 +189,7 @@ export default function EditProductPage() {
     const removeNewImage = (index) => {
         try {
             URL.revokeObjectURL(imagePreviews[index]);
-        } catch (e) {}
+        } catch (_e) { /* URL may already be revoked */ }
         
         setImages(prev => prev.filter((_, i) => i !== index));
         setImagePreviews(prev => prev.filter((_, i) => i !== index));
@@ -499,7 +499,7 @@ export default function EditProductPage() {
                         產品選項（可選）
                     </label>
                     <p className="text-xs text-gray-500 mb-3">
-                        同一個產品內的選項，例如：Size → S, M, L　｜　客人預訂時可以揀選
+                        同一個產品內的選項，例如：Size → S, M, L ｜ 客人預訂時可以揀選
                     </p>
                     
                     {/* Add new option */}

@@ -34,7 +34,7 @@ jobs:
         run: npm ci
 
       - name: 🔍 Run ESLint
-        run: echo "⚠️ Skipping lint — next lint removed in Next.js 16, ESLint not yet configured separately"
+        run: npx eslint .
 
   # ==========================================
   # Job 2: 單元測試

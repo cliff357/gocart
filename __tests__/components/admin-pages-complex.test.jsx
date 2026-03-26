@@ -141,7 +141,7 @@ jest.mock('firebase/firestore', () => ({
 // Mock next/image
 jest.mock('next/image', () => {
     return function MockImage(props) {
-        // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+        // eslint-disable-next-line @next/next/no-img-element
         return <img {...props} />
     }
 })

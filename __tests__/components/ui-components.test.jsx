@@ -16,7 +16,7 @@ import { render, screen } from '@testing-library/react';
 jest.mock('next/image', () => ({
     __esModule: true,
     default: ({ priority, ...props }) => {
-        // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+        // eslint-disable-next-line @next/next/no-img-element
         return <img {...props} data-priority={priority ? 'true' : undefined} />;
     },
 }));

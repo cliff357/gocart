@@ -26,6 +26,11 @@ export default function AdminProductsListPage() {
     const [productsLoading, setProductsLoading] = useState(true);
     const [deleteLoading, setDeleteLoading] = useState(null);
 
+    // Load products and categories
+    useEffect(() => {
+        loadData();
+    }, []);
+
     // Redirect if not admin
     if (!loading && !isAdmin) {
         router.push('/');
@@ -40,11 +45,6 @@ export default function AdminProductsListPage() {
             </div>
         );
     }
-
-    // Load products and categories
-    useEffect(() => {
-        loadData();
-    }, []);
 
     const loadData = async () => {
         try {

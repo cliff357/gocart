@@ -277,7 +277,7 @@ export default function AddProductPage() {
                                             // remove image at idx
                                             setImages(prev => prev.filter((_, i) => i !== idx));
                                             setImagePreviews(prev => {
-                                                try { URL.revokeObjectURL(prev[idx]); } catch (e) {}
+                                                try { URL.revokeObjectURL(prev[idx]); } catch (_e) { /* URL may already be revoked */ }
                                                 return prev.filter((_, i) => i !== idx);
                                             });
                                         }}
@@ -400,7 +400,7 @@ export default function AddProductPage() {
                         產品選項（可選）
                     </label>
                     <p className="text-xs text-gray-500 mb-3">
-                        同一個產品內的選項，例如：Size → S, M, L　｜　客人預訂時可以揀選
+                        同一個產品內的選項，例如：Size → S, M, L ｜ 客人預訂時可以揀選
                     </p>
                     
                     {/* Add new option */}
