@@ -1,4 +1,20 @@
+// ============================================
+// Fix Next.js 16 RangeError: Maximum call stack size exceeded
+// require('next/jest') 會載入 unhandled-rejection.tsx，佢會：
+// 1. 加一個 unhandledRejection listener（呼叫 patched setImmediate → 無限遞歸）
+// 2. Patch process.removeAllListeners / process.on / process.addListener
+// 但 process.removeListener 冇被 patch，可以用嚟移除 listener。
+// 必須喺呢度做，因為 setupFilesAfterEnv 已經太遲。
+// ============================================
+process.env.NEXT_UNHANDLED_REJECTION_FILTER = 'silent'
+
 const nextJest = require('next/jest')
+
+// 移除 Next.js 的 unhandledRejection listener（佢會造成 setImmediate 無限遞歸）
+const __nextListeners = process.rawListeners('unhandledRejection')
+for (const __l of __nextListeners) {
+    process.removeListener('unhandledRejection', __l)
+}
 
 const createJestConfig = nextJest({
     // Provide the path to your Next.js app to load next.config.js and .env files
@@ -45,20 +61,29 @@ const customJestConfig = {
         'lib/**/*.{js,jsx}',
         '!**/*.d.ts',
         '!**/node_modules/**',
+        // 排除 Firebase SDK wrappers — 呢啲文件用 Emulator 測試覆蓋，唔適合 unit test mock
+        '!lib/firebase/**',
+        // 排除靜態配置文件 — 無業務邏輯
+        '!lib/config/colors.js',
+        '!lib/config/themes.js',
+        // 排除 Redux store 設定 — 組件測試間接覆蓋
+        '!lib/store.js',
     ],
     
     // 設置測試前的全局配置
     setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
     
-    // 覆蓋率閾值 (可選，之後可以逐步提高)
-    // coverageThreshold: {
-    //     global: {
-    //         branches: 50,
-    //         functions: 50,
-    //         lines: 50,
-    //         statements: 50,
-    //     },
-    // },
+    // 覆蓋率閾值 — 防止覆蓋率倒退
+    // 排除 Firebase SDK wrappers 後，真實覆蓋率約 45-50%
+    // 設 30% 作為底線，後續可逐步提高
+    coverageThreshold: {
+        global: {
+            branches: 25,
+            functions: 25,
+            lines: 30,
+            statements: 30,
+        },
+    },
 }
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

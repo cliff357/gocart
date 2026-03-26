@@ -1,7 +1,7 @@
 'use client'
 
 import { usePathname } from "next/navigation"
-import { HomeIcon, ShieldCheckIcon, StoreIcon, TicketPercentIcon } from "lucide-react"
+import { HomeIcon, PlusCircle, Tag, Package, Users, Layout, CalendarCheck, ClipboardList, History, Bell } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { assets } from "@/assets/assets"
@@ -12,16 +12,21 @@ const AdminSidebar = () => {
 
     const sidebarLinks = [
         { name: 'Dashboard', href: '/admin', icon: HomeIcon },
-        { name: 'Stores', href: '/admin/stores', icon: StoreIcon },
-        { name: 'Approve Store', href: '/admin/approve', icon: ShieldCheckIcon },
-        { name: 'Coupons', href: '/admin/coupons', icon: TicketPercentIcon  },
+        { name: 'Home Setting', href: '/admin/home-setting', icon: Layout },
+        { name: 'About Setting', href: '/admin/about-setting', icon: History },
+        { name: 'Reservations', href: '/admin/reservations', icon: CalendarCheck },
+        { name: 'Products List', href: '/admin/products/list', icon: Package },
+        { name: 'Add Product', href: '/admin/products', icon: PlusCircle },
+        { name: 'Edit Categories', href: '/admin/categories', icon: Tag },
+        { name: 'Manage Admins', href: '/admin/admins', icon: Users },
+        { name: 'Notifications', href: '/admin/notifications', icon: Bell },
+        { name: '功能許願樹', href: '/admin/todo', icon: ClipboardList },
     ]
 
     return (
         <div className="inline-flex h-full flex-col gap-5 border-r border-slate-200 sm:min-w-60">
             <div className="flex flex-col gap-3 justify-center items-center pt-8 max-sm:hidden">
-                <Image className="w-14 h-14 rounded-full" src={assets.gs_logo} alt="" width={80} height={80} />
-                <p className="text-slate-700">Hi, GreatStack</p>
+                <p className="text-slate-700 font-semibold text-lg">LoyaultyClub</p>
             </div>
 
             <div className="max-sm:mt-6">

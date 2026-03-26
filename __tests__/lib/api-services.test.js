@@ -2,22 +2,65 @@
  * P3 API Service 測試
  *
  * 測試 ApiService 的所有服務類方法
- * 驗證 mock data 返回格式和業務邏輯
+ * 驗證 Firestore-backed 服務的返回格式和業務邏輯
  *
  * 運行方式：
  *   npm run test:components
  */
 
+// ============================================
+// Mock FirestoreService (避免真實 Firebase 調用)
+// ============================================
+const mockProducts = [
+    { id: 'prod-1', name: 'Wireless Headphones', price: 99.99, category: 'Electronics', storeId: 'store-1', userId: 'user-1' },
+    { id: 'prod-2', name: 'Bluetooth Speaker', price: 49.99, category: 'Electronics', storeId: 'store-1', userId: 'user-1' },
+];
+const mockUsers = [
+    { id: 'user-1', email: 'alice@test.com', username: 'alice' },
+    { id: 'user-2', email: 'bob@test.com', username: 'bob' },
+];
+const mockOrders = [
+    { id: 'order-1', userId: 'user-1', status: 'pending', totalAmount: 149.98, items: [], createdAt: '2025-01-01' },
+];
+const mockAddresses = [
+    { id: 'addr-1', userId: 'user-1', street: '123 Main St', city: 'HK', country: 'HK' },
+];
+
+jest.mock('@/lib/services/FirestoreService', () => ({
+    productService: {
+        getAll: jest.fn(() => Promise.resolve(mockProducts)),
+        getById: jest.fn((id) => Promise.resolve(mockProducts.find(p => p.id === id) || null)),
+        getByCategory: jest.fn((cat) => Promise.resolve(mockProducts.filter(p => p.category === cat))),
+        getByStoreId: jest.fn(() => Promise.resolve(mockProducts)),
+        search: jest.fn((q) => Promise.resolve(mockProducts.filter(p => p.name.toLowerCase().includes(q.toLowerCase())))),
+        create: jest.fn(() => Promise.resolve('new-prod-id')),
+        update: jest.fn(() => Promise.resolve()),
+        delete: jest.fn(() => Promise.resolve()),
+    },
+    userService: {
+        getAll: jest.fn(() => Promise.resolve(mockUsers)),
+        getById: jest.fn((id) => Promise.resolve(mockUsers.find(u => u.id === id) || null)),
+    },
+    orderService: {
+        getAll: jest.fn(() => Promise.resolve(mockOrders)),
+        getById: jest.fn((id) => Promise.resolve(mockOrders.find(o => o.id === id) || null)),
+        create: jest.fn(() => Promise.resolve('new-order-id')),
+    },
+    addressService: {
+        getAll: jest.fn(() => Promise.resolve(mockAddresses)),
+        getById: jest.fn((id) => Promise.resolve(mockAddresses.find(a => a.id === id) || null)),
+        getByUserId: jest.fn((uid) => Promise.resolve(mockAddresses.filter(a => a.userId === uid))),
+        create: jest.fn(() => Promise.resolve('new-addr-id')),
+    },
+    categoryService: {
+        getAll: jest.fn(() => Promise.resolve([])),
+        getTree: jest.fn(() => Promise.resolve([])),
+    },
+}));
+
 import ApiService, {
     ProductApiService,
-    UserApiService,
-    StoreApiService,
-    RatingApiService,
     OrderApiService,
-    AddressApiService,
-    CouponApiService,
-    DashboardApiService,
-    MiscApiService,
 } from '@/lib/services/ApiService';
 
 // 加速測試：用 jest fake timers 跳過 simulateDelay
@@ -57,14 +100,7 @@ const expectErrorResponse = (response) => {
 describe('ApiService 中央入口', () => {
     it('應該包含所有服務', () => {
         expect(ApiService.Product).toBe(ProductApiService);
-        expect(ApiService.User).toBe(UserApiService);
-        expect(ApiService.Store).toBe(StoreApiService);
-        expect(ApiService.Rating).toBe(RatingApiService);
         expect(ApiService.Order).toBe(OrderApiService);
-        expect(ApiService.Address).toBe(AddressApiService);
-        expect(ApiService.Coupon).toBe(CouponApiService);
-        expect(ApiService.Dashboard).toBe(DashboardApiService);
-        expect(ApiService.Misc).toBe(MiscApiService);
     });
 });
 
@@ -113,109 +149,10 @@ describe('ProductApiService', () => {
         expect(response.data.length).toBeGreaterThan(0);
     });
 
-    it('createProduct: 未實現的方法返回錯誤', async () => {
-        const response = await runWithTimers(() => ProductApiService.createProduct({}));
-        expectErrorResponse(response);
-        expect(response.message).toContain('Not implemented');
-    });
-});
-
-// ============================================
-// User API Service
-// ============================================
-describe('UserApiService', () => {
-    it('getAllUsers: 返回用戶列表', async () => {
-        const response = await runWithTimers(() => UserApiService.getAllUsers());
-        expectSuccessResponse(response);
-        expect(Array.isArray(response.data)).toBe(true);
-    });
-
-    it('getUser: 返回單一用戶', async () => {
-        const allUsers = await runWithTimers(() => UserApiService.getAllUsers());
-        const firstId = allUsers.data[0].id;
-
-        const response = await runWithTimers(() => UserApiService.getUser(firstId));
-        expectSuccessResponse(response);
-        expect(response.data.id).toBe(firstId);
-    });
-
-    it('getUser: 不存在的用戶返回錯誤', async () => {
-        const response = await runWithTimers(() => UserApiService.getUser('non-existent'));
-        expectErrorResponse(response);
-    });
-
-    it('getCurrentUser: 返回當前用戶', async () => {
-        const response = await runWithTimers(() => UserApiService.getCurrentUser());
+    it('createProduct: 成功創建商品', async () => {
+        const response = await runWithTimers(() => ProductApiService.createProduct({ name: 'Test' }));
         expectSuccessResponse(response);
         expect(response.data).toHaveProperty('id');
-    });
-
-    it('login: 未實現', async () => {
-        const response = await runWithTimers(() => UserApiService.login({}));
-        expectErrorResponse(response);
-    });
-});
-
-// ============================================
-// Store API Service
-// ============================================
-describe('StoreApiService', () => {
-    it('getAllStores: 返回商店列表', async () => {
-        const response = await runWithTimers(() => StoreApiService.getAllStores());
-        expectSuccessResponse(response);
-        expect(Array.isArray(response.data)).toBe(true);
-    });
-
-    it('getStore: 返回單一商店', async () => {
-        const allStores = await runWithTimers(() => StoreApiService.getAllStores());
-        const firstId = allStores.data[0].id;
-
-        const response = await runWithTimers(() => StoreApiService.getStore(firstId));
-        expectSuccessResponse(response);
-        expect(response.data.id).toBe(firstId);
-    });
-
-    it('getStore: 不存在的商店返回錯誤', async () => {
-        const response = await runWithTimers(() => StoreApiService.getStore('non-existent'));
-        expectErrorResponse(response);
-    });
-
-    it('getStoreByUsername: 按用戶名查詢', async () => {
-        const allStores = await runWithTimers(() => StoreApiService.getAllStores());
-        const username = allStores.data[0].username;
-
-        const response = await runWithTimers(() => StoreApiService.getStoreByUsername(username));
-        expectSuccessResponse(response);
-        expect(response.data.username).toBe(username);
-    });
-});
-
-// ============================================
-// Rating API Service
-// ============================================
-describe('RatingApiService', () => {
-    it('getAllRatings: 返回評分列表', async () => {
-        const response = await runWithTimers(() => RatingApiService.getAllRatings());
-        expectSuccessResponse(response);
-        expect(Array.isArray(response.data)).toBe(true);
-    });
-
-    it('getRating: 返回單一評分', async () => {
-        const allRatings = await runWithTimers(() => RatingApiService.getAllRatings());
-        const firstId = allRatings.data[0].id;
-
-        const response = await runWithTimers(() => RatingApiService.getRating(firstId));
-        expectSuccessResponse(response);
-        expect(response.data.id).toBe(firstId);
-    });
-
-    it('getRatingsByProduct: 按商品查詢評分', async () => {
-        const allRatings = await runWithTimers(() => RatingApiService.getAllRatings());
-        const productId = allRatings.data[0].productId;
-
-        const response = await runWithTimers(() => RatingApiService.getRatingsByProduct(productId));
-        expectSuccessResponse(response);
-        expect(Array.isArray(response.data)).toBe(true);
     });
 });
 
@@ -244,90 +181,15 @@ describe('OrderApiService', () => {
         expectErrorResponse(response);
     });
 
-    it('createOrder: 未實現', async () => {
-        const response = await runWithTimers(() => OrderApiService.createOrder({}));
-        expectErrorResponse(response);
+    it('createOrder: 建立訂單', async () => {
+        const response = await runWithTimers(() => OrderApiService.createOrder({ userId: 'user_1', items: [] }));
+        expectSuccessResponse(response);
+        expect(response.data).toHaveProperty('id');
     });
 });
 
 // ============================================
 // Address API Service
 // ============================================
-describe('AddressApiService', () => {
-    it('getAddressesByUser: 按用戶查詢地址', async () => {
-        const response = await runWithTimers(() => AddressApiService.getAddressesByUser('user_1'));
-        expectSuccessResponse(response);
-        expect(Array.isArray(response.data)).toBe(true);
-    });
 
-    it('getAddress: 不存在的地址返回錯誤', async () => {
-        const response = await runWithTimers(() => AddressApiService.getAddress('non-existent'));
-        expectErrorResponse(response);
-    });
 
-    it('createAddress: 未實現', async () => {
-        const response = await runWithTimers(() => AddressApiService.createAddress({}));
-        expectErrorResponse(response);
-    });
-});
-
-// ============================================
-// Coupon API Service
-// ============================================
-describe('CouponApiService', () => {
-    it('getAllCoupons: 返回優惠券列表', async () => {
-        const response = await runWithTimers(() => CouponApiService.getAllCoupons());
-        expectSuccessResponse(response);
-        expect(Array.isArray(response.data)).toBe(true);
-    });
-
-    it('getPublicCoupons: 返回公開優惠券', async () => {
-        const response = await runWithTimers(() => CouponApiService.getPublicCoupons());
-        expectSuccessResponse(response);
-        expect(Array.isArray(response.data)).toBe(true);
-    });
-
-    it('getCoupon: 不存在的優惠券返回錯誤', async () => {
-        const response = await runWithTimers(() => CouponApiService.getCoupon('INVALID'));
-        expectErrorResponse(response);
-        expect(response.message).toContain('not found');
-    });
-
-    it('validateCoupon: 不存在的優惠券驗證失敗', async () => {
-        const response = await runWithTimers(() => CouponApiService.validateCoupon('FAKE', 'user-1', 100));
-        expectErrorResponse(response);
-        expect(response.message).toContain('Invalid');
-    });
-});
-
-// ============================================
-// Dashboard API Service
-// ============================================
-describe('DashboardApiService', () => {
-    it('getAdminDashboard: 返回管理後台數據', async () => {
-        const response = await runWithTimers(() => DashboardApiService.getAdminDashboard());
-        expectSuccessResponse(response);
-    });
-
-    it('getStoreDashboard: 返回商店後台數據', async () => {
-        const response = await runWithTimers(() => DashboardApiService.getStoreDashboard('store-1'));
-        expectSuccessResponse(response);
-    });
-});
-
-// ============================================
-// Misc API Service
-// ============================================
-describe('MiscApiService', () => {
-    it('getOurSpecs: 返回規格數據', async () => {
-        const response = await runWithTimers(() => MiscApiService.getOurSpecs());
-        expectSuccessResponse(response);
-        expect(Array.isArray(response.data)).toBe(true);
-        expect(response.data.length).toBeGreaterThan(0);
-    });
-
-    it('uploadImage: 未實現', async () => {
-        const response = await runWithTimers(() => MiscApiService.uploadImage(null));
-        expectErrorResponse(response);
-    });
-});

@@ -49,11 +49,23 @@ jobs:
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
-      # 6. 運行組件測試（先運行，較快）
-      - name: Run Component Tests
-        run: npm run test:components
+      # 6. 運行所有 Jest 測試（205 tests × 16 suites，含 components + lib）
+      #    注意：不用 --coverage，避免 CI 記憶體不足（coverage 由 ci.yml 負責）
+      #    用 --maxWorkers=1 防止多 worker 吃光 CI runner 記憶體
+      - name: Run All Jest Tests
+        run: npx jest --maxWorkers=1 --forceExit
+        env:
+          NODE_OPTIONS: '--unhandled-rejections=none --max-old-space-size=4096'
+          RESEND_API_KEY: test_key
+          NEXT_PUBLIC_SITE_URL: https://test.loyaultyclub.com
+          NEXT_PUBLIC_FIREBASE_API_KEY: test_api_key
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: test.firebaseapp.com
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: test-project
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: test.appspot.com
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: 123456789
+          NEXT_PUBLIC_FIREBASE_APP_ID: 1:123456789:web:abc123
 
-      # 7. 運行 Firebase Emulator 測試
+      # 7. 運行 Firebase Emulator 測試（52 tests，需要 Java）
       - name: Run Firebase Emulator Tests
         run: npm run test:emulator
 

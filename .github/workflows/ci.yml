@@ -1,0 +1,156 @@
+# GitHub Actions CI/CD Pipeline
+# 每次 push 或 PR 到 main branch 時自動運行測試
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # ==========================================
+  # Job 1: Lint 檢查
+  # ==========================================
+  lint:
+    name: 🔍 Lint Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📚 Install dependencies
+        run: npm ci
+
+      - name: 🔍 Run ESLint
+        run: npx eslint .
+
+  # ==========================================
+  # Job 2: 單元測試
+  # ==========================================
+  test:
+    name: 🧪 Unit Tests
+    runs-on: ubuntu-latest
+    needs: lint  # 需要 lint 通過後才運行
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📚 Install dependencies
+        run: npm ci
+
+      - name: 🧪 Run tests with coverage
+        run: npx jest --ci --coverage --maxWorkers=1 --forceExit
+        env:
+          # CI 記憶體限制 — 防止 OOM (ui-components-p1 會拉入 Firebase SDK)
+          NODE_OPTIONS: '--unhandled-rejections=none --max-old-space-size=4096'
+          # 測試用的環境變數 (非真實值)
+          RESEND_API_KEY: test_key
+          NEXT_PUBLIC_SITE_URL: https://test.loyaultyclub.com
+          NEXT_PUBLIC_FIREBASE_API_KEY: test_api_key
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: test.firebaseapp.com
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: test-project
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: test.appspot.com
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: 123456789
+          NEXT_PUBLIC_FIREBASE_APP_ID: 1:123456789:web:abc123
+
+      - name: 📊 Upload coverage report
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: ./coverage/lcov.info
+          fail_ci_if_error: false
+          verbose: true
+
+  # ==========================================
+  # Job 3: Build 測試
+  # ==========================================
+  build:
+    name: 🏗️ Build Check
+    runs-on: ubuntu-latest
+    needs: test  # 需要測試通過後才運行
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📚 Install dependencies
+        run: npm ci
+
+      - name: 🏗️ Build application
+        run: npm run build
+        env:
+          # Build 時需要的環境變數
+          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+
+  # ==========================================
+  # Job 4: 安全性檢查 (可選)
+  # ==========================================
+  security:
+    name: 🔒 Security Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 📚 Install dependencies
+        run: npm ci
+
+      - name: 🔒 Run security audit
+        run: npm audit --audit-level=high
+        continue-on-error: true  # 暫時不阻擋，只報告
+
+  # ==========================================
+  # Job 5: 部署通知 (只在 main branch push 時)
+  # ==========================================
+  notify:
+    name: 📢 Deployment Ready
+    runs-on: ubuntu-latest
+    needs: [lint, test, build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: ✅ All checks passed
+        run: |
+          echo "🎉 All CI checks passed!"
+          echo "📦 Ready for deployment to Vercel"
+          echo ""
+          echo "Commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Author: ${{ github.actor }}"
